@@ -1,0 +1,223 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE faces-config PUBLIC
+	"-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.1//EN"
+	"http://java.sun.com/dtd/web-facesconfig_1_1.dtd">
+<!-- 
+	<!DOCTYPE faces-config PUBLIC
+	"-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.1//EN"
+	"web-facesconfig_1_1.dtd">
+-->
+<!-- $Id: faces-config.xml,v 1.2 2007/01/09 22:11:32 marco Exp $ -->
+<faces-config>
+	<application>
+		<message-bundle>org.mmarini.ratio.web.Messages</message-bundle>
+		<locale-config>
+			<default-locale>en</default-locale>
+			<supported-locale>it</supported-locale>
+		</locale-config>
+	</application>
+
+	<!-- Managed bean -->
+	<managed-bean>
+		<description />
+		<managed-bean-name>testBean</managed-bean-name>
+		<managed-bean-class>
+			org.mmarini.ratio.web.TestBean
+		</managed-bean-class>
+		<managed-bean-scope>request</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description />
+		<managed-bean-name>localeBean</managed-bean-name>
+		<managed-bean-class>
+			org.mmarini.ratio.web.LocaleBean
+		</managed-bean-class>
+		<managed-bean-scope>request</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description />
+		<managed-bean-name>ratioBean</managed-bean-name>
+		<managed-bean-class>
+			org.mmarini.ratio.web.RatioBean
+		</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description />
+		<managed-bean-name>newArrayBean</managed-bean-name>
+		<managed-bean-class>
+			org.mmarini.ratio.web.NewArrayBean
+		</managed-bean-class>
+		<managed-bean-scope>request</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description />
+		<managed-bean-name>editArrayBean</managed-bean-name>
+		<managed-bean-class>
+			org.mmarini.ratio.web.EditArrayBean
+		</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<!-- Navigation rules -->
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>consume</from-outcome>
+			<to-view-id>/consume.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>viewMap</from-outcome>
+			<to-view-id>/selectLocation.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>selectDeparture</from-outcome>
+			<to-view-id>/selectLocation.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>selectArrival</from-outcome>
+			<to-view-id>/selectLocation.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>selectCheckpoint</from-outcome>
+			<to-view-id>/selectLocation.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>selectReference</from-outcome>
+			<to-view-id>/selectLocation.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>planParameters</from-outcome>
+			<to-view-id>/createPlan.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>manageCodedPlan</from-outcome>
+			<to-view-id>/manageCodedPlan.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>manageCheckpoint</from-outcome>
+			<to-view-id>/manageCheckpoint.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<navigation-case>
+			<from-outcome>checkpointEntry</from-outcome>
+			<to-view-id>/codedCheckpoint.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<!-- Navigation rules -->
+	<navigation-rule>
+		<description />
+		<from-view-id>/main.jsp</from-view-id>
+		<navigation-case>
+			<from-outcome>createNewArray</from-outcome>
+			<to-view-id>/arraySize.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>editArray</from-outcome>
+			<to-view-id>/editArray.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>operatorsHelp</from-outcome>
+			<to-view-id>/operators.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>syntaxHelp</from-outcome>
+			<to-view-id>/syntax.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<from-view-id>/arraySize.jsp</from-view-id>
+		<navigation-case>
+			<from-outcome>success</from-outcome>
+			<to-view-id>/editArray.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>cancel</from-outcome>
+			<to-view-id>/main.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<from-view-id>/editArray.jsp</from-view-id>
+		<navigation-case>
+			<from-outcome>success</from-outcome>
+			<to-view-id>/main.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>cancel</from-outcome>
+			<to-view-id>/main.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<from-view-id>/operators.jsp</from-view-id>
+		<navigation-case>
+			<from-outcome>gotoSyntax</from-outcome>
+			<to-view-id>/syntax.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>gotoCalculator</from-outcome>
+			<to-view-id>/main.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<navigation-rule>
+		<from-view-id>/syntax.jsp</from-view-id>
+		<navigation-case>
+			<from-outcome>gotoOperators</from-outcome>
+			<to-view-id>/operators.jsp</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>gotoCalculator</from-outcome>
+			<to-view-id>/main.jsp</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+
+	<!-- Components -->
+	<component>
+		<component-type>org.mmarini.faces.HtmlGrid</component-type>
+		<component-class>
+			org.mmarini.faces.component.html.HtmlGrid
+		</component-class>
+		<component-extension>
+			<renderer-type>org.mmarini.faces.Grid</renderer-type>
+		</component-extension>
+	</component>
+
+	<component>
+		<component-type>org.mmarini.faces.Test</component-type>
+		<component-class>
+			org.mmarini.faces.component.UITest
+		</component-class>
+		<component-extension>
+			<renderer-type>org.mmarini.faces.Test</renderer-type>
+		</component-extension>
+	</component>
+</faces-config>

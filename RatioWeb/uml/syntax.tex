@@ -1,0 +1,66 @@
+\documentclass{article}
+\begin{document}
+  \title{RatioWeb\thanks{Versione \$Id: syntax.tex,v 1.2 2006/01/31 22:31:29 marco Exp $ $}}
+  \author{Marco Marini}
+  \maketitle
+  \part{Sintassi di comandi}
+  \section{Regole sintattiche}
+  Definizioni delle regole sintattiche.
+  
+  \subsection{assign}
+  assign ::= $<$name$>$ ``='' $<$add-expr$>$
+ 
+  \subsection{name}
+  name := $<$name-start$>$ $<$name-suffix$>$
+  \\
+  \\
+  name-start := ``A-Z'' $|$ ``a-z'' $|$ ``\_''
+  \\
+  \\
+  name-suffix := ``0-9'' $<$name-suffix$>$
+  \\
+  name-suffix := $<$name-start$>$ $<$name-suffix$>$
+  \\
+  name-suffix := $<$empty$>$
+  
+  \subsection{add-expr}
+  add-expr := $<$mul-expr$>$ $<$add-expr1$>$
+  \\
+  \\
+  add-expr1 := ``+'' $<$add-expr$>$
+  \\
+  add-expr1 := ``-'' $<$add-expr$>$
+  \\
+  add-expr1 := $<$empty$>$
+
+  \subsection{mul-expr}
+  mul-expr := $<$expr$>$ $<'$mul-expr1$>$
+  \\
+  \\
+  mul-expr1 := ``*'' $<$mul-expr$>$
+  \\
+  mul-expr1 := ``/'' $<$mul-expr$>$
+  \\
+  mul-expr1 := $<$empty$>$
+ 
+  \subsection{expr}
+  expr := $<$constant$>$
+  \\
+  expr := $<$name$>$
+  \\
+  expr := ``+'' $<$expr$>$
+  \\
+  expr := ``-'' $<$expr$>$
+  \\
+  expr := ``(`` $<$add-expr$>$ ``)''
+ 
+  \subsection{constant}
+  expr := $<$integer-number$>$ $<$fract-number$>$
+  \\
+  \\
+  fract-number := ``.'' $<$integer-number$>$
+  \\
+  fract-number := $<$empty$>$
+
+\end{document}.
+

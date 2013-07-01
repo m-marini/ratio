@@ -1,0 +1,112 @@
+\item \section{Trasformazione di una matrice da una base ad un altra}
+
+Sia $\vec{x}=x_i \vec{e_i}=x_1 \vec{e_1}+\dots+x_n\vec{e_n}$ un vettore arbitrario nella base $\vec{e_i}$.
+
+Il vettore $\vec{x}$ si trasforma mediante la matrice $A$ nel vettore $\vec{y}=y_i \vec{e_i}=y_1 \vec{e_1}+\dots+y_n\vec{e_n}$.
+
+In forma matriciale avremo:
+\begin{equation}
+  Y=AX
+  \label{equno:cambiobase.1}
+\end{equation}
+dove
+\begin{displaymath}
+  X=
+  \left\Vert
+  \begin{array}{l}
+    x_1\\ \dots\\x_n
+  \end{array}
+  \right\Vert
+  \;\;\;
+  Y=
+  \left\Vert
+  \begin{array}{l}
+    y_1\\ \dots\\y_n
+  \end{array}
+  \right\Vert
+  \;\;\;
+  A=
+  \left\Vert
+  \begin{array}{lll}
+    a_{11}&\dots&a_{1n}\\
+    \dots&\dots&\dots\\
+    a_{n1}&\dots&a_{nn}
+  \end{array}
+  \right\Vert
+\end{displaymath}
+
+Introduciamo nello spazio una nuova base $\vec{e'_i}$ legata alla base $\vec{e_i}$ dalla formula
+\begin{equation}
+  \vec{e'_i}=\vec{e_j} b_{ji}  
+  \label{equno:cambiobase.2}
+\end{equation}
+ovvero
+\begin{displaymath}
+  \begin{array}{l}
+    \vec{e'_1}=\vec{e_1} b_{11}+\dots+\vec{e_n} b_{n1}
+    \\
+    \dots
+    \\
+    \vec{e'_n}=\vec{e_1} b_{1n}+\dots+\vec{e_n} b_{nn}
+  \end{array}
+\end{displaymath}.
+
+Supponiamo che il vettore $\vec{x}$ si scriva nella base $\vec{e'_i}$ come
+\begin{displaymath}
+  \vec{x'}=x'_i\vec{e'_i}=x'_1\vec{e'_1}+\dots+x'_n\vec{e'_n}
+\end{displaymath}
+
+Possiamo allora scrivere $x_i\vec{i}=x'_j\vec{e'_j}$ dove il secondo membro
+\`e stata sostituita l'espressione (\ref{equno:cambiobase.1}).
+Uguagliando i coefficenti dei vettori $\vec{e_i}$ a destra e a sinistra
+otteniamo $x_i=b_{ij}x'_j$ ovvero
+\begin{equation}
+  X=BX'
+  \label{equno:cambiobase.3}
+\end{equation}
+dove
+\begin{displaymath}
+  B=
+  \left\Vert
+  \begin{array}{lll}
+    b_{11}&\dots&b_{1n}\\
+    \dots&\dots&\dots\\
+    b_{n1}&\dots&b_{nn}
+  \end{array}
+  \right\Vert
+  \;\;\;
+  X'=
+  \left\Vert
+  \begin{array}{l}
+    x'_1\\ \dots\\x'_n
+  \end{array}
+  \right\Vert
+\end{displaymath}
+
+Similmente otteniamo che
+\begin{equation}
+  Y=BY'
+  \label{equno:cambiobase.4}
+\end{equation}
+
+Sostituendo la (\ref{equno:cambiobase.3}) e la (\ref{equno:cambiobase.4}) alla (\ref{equno:cambiobase.1})
+otteniamo
+\begin{equation}
+  BY'=ABX'
+  \label{equno:cambiobase.5}
+\end{equation}
+
+Essendo la $B$ una trasformazione di base ammette l'inversa $B^{-1}$.
+
+Moltiplichiamo ambo i membri della (\ref{equno:cambiobase.5}) per  $B^{-1}$
+\begin{displaymath}
+  B^{-1}BY'=B^{-1}ABX'
+\end{displaymath}
+\begin{displaymath}
+  Y'=B^{-1}ABX'
+\end{displaymath}
+
+Quindi la matrice di trasformazione $A$ si rappresenta nella nuova base con
+\begin{equation}
+  A'=B^{-1}AB
+\end{equation}
