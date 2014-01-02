@@ -1,0 +1,142 @@
+\section{Autovalori e autovettori}
+Sia ora $\vec{e'_i}$ una base formata dagli autovettori della matrice di
+trasformazione $A$.
+Abbiamo che
+\begin{equation}
+  \vec{e'_i}=\vec{e_j}b_{ji}
+  \label{equno:autovalori.1}
+\end{equation}
+
+Le equazioni (\ref{equno:autovalori.1}) devono soddisfare le equazioni per
+gli autovettori, quindi
+\begin{equation}
+  \sum_{k=1}^n\left( a_{jk} - \lambda_i \delta_{jk}\right)b_{ki}=0
+  ,\;\;\;\;i,j=1\dots n
+  \label{equno:autovalori.2}
+\end{equation}
+
+Poniamo ora $b_{ni}=1$, la matrice di trasformazione \`e quindi
+\begin{displaymath}
+  B=
+  \left\Vert
+  \begin{array}{lll}
+    b_{11}&\dots&b_{1n}
+    \\
+    \dots&\dots&\dots
+    \\
+    b_{(n-1)1}&\dots&b_{(n-1)n}
+    \\
+    1&1&1
+  \end{array}
+  \right\Vert
+\end{displaymath}
+Il sistema (\ref{equno:autovalori.2}) \`e di rango $n-1$
+quindi possima elimiare l'ultima riga e otteniamo
+\begin{displaymath}
+  \sum_{k=1}^{n-1}\left( a_{jk} - \lambda_i \delta_{jk}\right)b_{ki}m+a_{jn}=0
+  ,\;\;\;\;i=1\dots n
+  ,\;\;\;\;j=1\dots (n-1)
+\end{displaymath}
+\begin{equation}
+  \sum_{k=1}^{n-1}\left( a_{jk} - \lambda_i \delta_{jk}\right)b_{ki}=-a_{jn}
+  ,\;\;\;\;i=1\dots n
+  ,\;\;\;\;j=1\dots (n-1)
+  \label{equno:autovalori.3}
+\end{equation}
+in forma matriciale
+\begin{equation}
+  \left( A_{n-1} - \lambda_i \delta \right) B_i=A_n
+  \label{equno:autovalori.4}
+\end{equation}
+dove
+\begin{displaymath}
+  A_{n-1}=
+  \left\Vert
+  \begin{array}{lll}
+    a_{11}&\dots&a_{1(n-1)}
+    \\
+    \dots&\dots&\dots
+    \\
+    a_{(n-1)1}&\dots&a_{(n-1)(n-1)}
+  \end{array}
+  \right\Vert
+  ,\;\;\;\;
+  B_i = 
+  \left\Vert
+  \begin{array}{l}
+    b_{1i}
+    \\
+    \dots
+    \\
+    b_{(n-1)i}
+  \end{array}
+  \right\Vert
+  ,\;\;\;\;
+  A_n = 
+  \left\Vert
+  \begin{array}{l}
+    -a_{1n}
+    \\
+    \dots
+    \\
+    -a_{(n-1)n}
+  \end{array}
+  \right\Vert
+\end{displaymath}
+La (\ref{equno:autovalori.4}) ci permette di calcolari $Bi$ quindi
+\begin{equation}
+   B_i=\left( A_{n-1} - \lambda_i \delta \right)^{-1}A_n
+  \label{equno:autovalori.5}
+\end{equation}
+
+Problema.
+
+Calcoliamo la matrice di trasformazione della base in un piano $n=2$.
+
+Avremo che
+\begin{displaymath}
+  A=
+  \left\Vert
+  \begin{array}{ll}
+    a_{11}&a_{12}
+    \\
+    a_{21}&a_{22}
+  \end{array}
+  \right\Vert
+\end{displaymath}
+quindi
+\begin{displaymath}
+  A_1=a_{11}
+  ,\;\;\;\;
+  A_2=-a_{12}
+  ,\;\;\;\;
+  B_i=
+  \left\Vert
+  \begin{array}{l}
+    -\frac{a_{12}}{a_{11} - \lambda_1}
+    \\
+    -\frac{a_{12}}{a_{11} - \lambda_2}
+  \end{array}
+  \right\Vert
+  ,\;\;\;\;
+  B=
+  \left\Vert
+  \begin{array}{ll}
+    -\frac{a_{12}}{a_{11} - \lambda_1}&-\frac{a_{12}}{a_{11} - \lambda_2}
+    \\
+    1&1
+  \end{array}
+  \right\Vert
+\end{displaymath}
+
+La nuova base \`e quindi espressa dalle equazioni
+\begin{displaymath}
+  \begin{array}{l}
+    \vec{e'_1}=\vec{e_1}\left(-\frac{a_{12}}{a_{11}-\lambda_1}\right)
+    +\vec{e_2}
+    \\
+    \vec{e'_2}=\vec{e_1}\left(-\frac{a_{12}}{a_{11}-\lambda_2}\right)
+    +\vec{e_2}
+  \end{array}
+\end{displaymath}
+
