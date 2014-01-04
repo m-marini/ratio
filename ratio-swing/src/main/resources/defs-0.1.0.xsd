@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.mmarini.org/ratio/defs-0.1.0"
+	elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:r="http://www.mmarini.org/ratio/defs-0.1.0">
+
+	<element name="defs" type="r:DefsType"></element>
+	<element name="exp" type="r:ExpType"></element>
+	<complexType name="ExpType">
+		<simpleContent>
+			<extension base="string">
+				<attribute name="id" type="ID" use="required"></attribute>
+			</extension>
+		</simpleContent>
+	</complexType>
+
+	<complexType name="DefsType">
+		<sequence>
+			<element ref="r:exp" maxOccurs="unbounded" minOccurs="0"></element>
+		</sequence>
+	</complexType>
+</schema>
