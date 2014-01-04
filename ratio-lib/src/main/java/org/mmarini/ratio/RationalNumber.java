@@ -16,7 +16,7 @@ public class RationalNumber extends Number implements
 	 * @param n
 	 * @return
 	 */
-	public static RationalNumber create(int n) {
+	public static RationalNumber create(final int n) {
 		return new RationalNumber(n, 1);
 	}
 
@@ -57,16 +57,24 @@ public class RationalNumber extends Number implements
 	 * @param number
 	 * @return
 	 */
-	public RationalNumber add(RationalNumber number) {
+	public RationalNumber add(final RationalNumber number) {
 		return create(upper * number.lower + lower * number.upper, lower
 				* number.lower);
+	}
+
+	/**
+	 * @param value
+	 * @return
+	 */
+	public RationalArray augment(final RationalNumber value) {
+		return new RationalArray(new RationalNumber[][] { { this, value } });
 	}
 
 	/**
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
 	@Override
-	public int compareTo(RationalNumber o) {
+	public int compareTo(final RationalNumber o) {
 		return upper * o.lower - o.upper * lower;
 	}
 
@@ -74,7 +82,7 @@ public class RationalNumber extends Number implements
 	 * @param number
 	 * @return
 	 */
-	public RationalNumber div(RationalNumber number) {
+	public RationalNumber div(final RationalNumber number) {
 		return create(upper * number.lower, lower * number.upper);
 	}
 
@@ -90,14 +98,14 @@ public class RationalNumber extends Number implements
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RationalNumber other = (RationalNumber) obj;
+		final RationalNumber other = (RationalNumber) obj;
 		if (lower != other.lower)
 			return false;
 		if (upper != other.upper)
@@ -167,7 +175,7 @@ public class RationalNumber extends Number implements
 	 * @param number
 	 * @return
 	 */
-	public RationalNumber mul(RationalNumber number) {
+	public RationalNumber mul(final RationalNumber number) {
 		return create(upper * number.upper, lower * number.lower);
 	}
 
@@ -182,7 +190,7 @@ public class RationalNumber extends Number implements
 	 * @param number
 	 * @return
 	 */
-	public RationalNumber sub(RationalNumber number) {
+	public RationalNumber sub(final RationalNumber number) {
 		return create(upper * number.lower - lower * number.upper, lower
 				* number.lower);
 	}
@@ -192,7 +200,7 @@ public class RationalNumber extends Number implements
 	 */
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		builder.append(upper);
 		if (lower > 1)
 			builder.append("/").append(lower);

@@ -79,7 +79,7 @@ public class RationalArray {
 	 * @param os
 	 * @return
 	 */
-	public RationalArray agument(final RationalArray o) {
+	public RationalArray agumentCol(final RationalArray o) {
 		final int n = values.length;
 		final int m = values[0].length;
 		final int no = o.values.length;
@@ -99,24 +99,41 @@ public class RationalArray {
 
 	/**
 	 * 
+	 * @param os
+	 * @return
+	 */
+	public RationalArray agumentCol(final RationalNumber o) {
+		final int n = values.length;
+		final int m = values[0].length;
+		if (n != 1)
+			throw new IllegalArgumentException(
+					"Agument of different dimensions arrays " + n + "x" + m
+							+ " != 1");
+
+		final RationalNumber[][] v = new RationalNumber[n][m + 1];
+		System.arraycopy(values[0], 0, v[0], 0, m);
+		v[0][m] = o;
+		return new RationalArray(v);
+	}
+
+	/**
 	 * @param o
 	 * @return
 	 */
-	public RationalArray agument(RationalVector o) {
+	public RationalArray agumentRow(final RationalArray o) {
 		final int n = values.length;
 		final int m = values[0].length;
-		final int no = o.getDimensions();
-		if (n != no)
+		final RationalNumber[][] vo = o.values;
+		final int no = vo.length;
+		final int mo = vo[0].length;
+		if (m != mo)
 			throw new IllegalArgumentException(
-					"Agument of different dimensions " + n + "x" + m + " != "
-							+ no);
+					"Agument of different dimensions arrays " + n + "x" + m
+							+ " != " + no + "x" + mo);
 
-		final RationalNumber[][] v = new RationalNumber[n][m + 1];
-		RationalNumber[] ov = o.getValues();
-		for (int i = 0; i < n; ++i) {
-			System.arraycopy(values[i], 0, v[i], 0, m);
-			v[i][m] = ov[i];
-		}
+		final RationalNumber[][] v = new RationalNumber[n + no][m];
+		System.arraycopy(values, 0, v, 0, n);
+		System.arraycopy(vo, 0, v, n, no);
 		return new RationalArray(v);
 	}
 
@@ -144,7 +161,7 @@ public class RationalArray {
 			throw new IllegalArgumentException("Inverse of not square array "
 					+ n + "x" + m);
 		final GaussAlgorithm g = new GaussAlgorithm(
-				clone(agument(identity(n)).values));
+				clone(agumentCol(identity(n)).values));
 		return g.isTriangular() ? g.getDeterminer() : RationalNumber.ZERO;
 	}
 
@@ -152,14 +169,14 @@ public class RationalArray {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RationalArray other = (RationalArray) obj;
+		final RationalArray other = (RationalArray) obj;
 		if (!Arrays.deepEquals(values, other.values))
 			return false;
 		return true;
@@ -194,7 +211,7 @@ public class RationalArray {
 			throw new IllegalArgumentException("Inverse of not square array "
 					+ n + "x" + m);
 		final GaussAlgorithm g = new GaussAlgorithm(
-				clone(agument(identity(n)).values));
+				clone(agumentCol(identity(n)).values));
 		return new RationalArray(g.getArray()).sliceCol(n, n);
 	}
 
@@ -202,11 +219,12 @@ public class RationalArray {
 	 * @param a
 	 * @return
 	 */
-	public RationalArray mul(RationalArray a) {
+	public RationalArray mul(final RationalArray a) {
 		final int n = values.length;
 		final int m = values[0].length;
-		final int na = a.values.length;
-		final int ma = a.values[0].length;
+		final RationalNumber[][] va = a.values;
+		final int na = va.length;
+		final int ma = va[0].length;
 		if (m != na)
 			throw new IllegalArgumentException(
 					"Multyply of different dimensions arrays " + n + "x" + m
@@ -217,7 +235,7 @@ public class RationalArray {
 			for (int j = 0; j < ma; ++j) {
 				RationalNumber t = RationalNumber.ZERO;
 				for (int k = 0; k < m; ++k)
-					t = t.add(values[i][k].mul(values[k][j]));
+					t = t.add(values[i][k].mul(va[k][j]));
 				v[i][j] = t;
 			}
 		return new RationalArray(v);
@@ -227,7 +245,7 @@ public class RationalArray {
 	 * @param scale
 	 * @return
 	 */
-	public RationalArray mul(RationalNumber scale) {
+	public RationalArray mul(final RationalNumber scale) {
 		final int n = values.length;
 		final int m = values[0].length;
 		final RationalNumber[][] v = new RationalNumber[n][m];
@@ -235,31 +253,6 @@ public class RationalArray {
 			for (int j = 0; j < m; ++j)
 				v[i][j] = values[i][j].mul(scale);
 		return new RationalArray(v);
-	}
-
-	/**
-	 * @param a
-	 * @return
-	 */
-	public RationalVector mul(RationalVector a) {
-		final int n = values.length;
-		final int m = values[0].length;
-		final int na = a.getDimensions();
-		if (m != na)
-			throw new IllegalArgumentException(
-					"Multyply of different dimensions array and vector " + n
-							+ "x" + m + " != " + n);
-
-		final RationalNumber[] va = a.getValues();
-		final RationalNumber[] v = new RationalNumber[n];
-		for (int i = 0; i < n; ++i) {
-			RationalNumber t = RationalNumber.ZERO;
-			for (int j = 0; j < m; ++j) {
-				t = t.add(values[i][j].mul(va[j]));
-			}
-			v[i] = t;
-		}
-		return new RationalVector(v);
 	}
 
 	/**
@@ -310,7 +303,7 @@ public class RationalArray {
 	 * @param a
 	 * @return
 	 */
-	public RationalArray sub(RationalArray a) {
+	public RationalArray sub(final RationalArray a) {
 		final int n = values.length;
 		final int m = values[0].length;
 		final int na = a.values.length;
@@ -332,10 +325,25 @@ public class RationalArray {
 	 */
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("RationalArray [values=")
-				.append(Arrays.toString(values)).append("]");
-		return builder.toString();
+		final StringBuilder b = new StringBuilder();
+		b.append("[");
+		boolean firstRow = true;
+		for (final RationalNumber[] row : values) {
+			if (firstRow)
+				firstRow = false;
+			else
+				b.append("; ");
+			boolean firstCol = true;
+			for (final RationalNumber n : row) {
+				if (firstCol)
+					firstCol = false;
+				else
+					b.append(", ");
+				b.append(n);
+			}
+		}
+		b.append("]");
+		return b.toString();
 	}
 
 	/**

@@ -4,7 +4,7 @@
 package org.mmarini.ratio;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasToString;
 import static org.junit.Assert.assertThat;
 import static org.mmarini.ratio.RatioMatchers.containsRatio;
 import static org.mmarini.ratio.RatioMatchers.hasRows;
@@ -51,19 +51,10 @@ public class RationalArrayTest {
 	@Test
 	public void testAgumentArray() {
 		assertThat(
-				magic.agument(RationalArray.identity(3)),
+				magic.agumentCol(RationalArray.identity(3)),
 				hasRows(containsRatio(8, 1, 6, 1, 0, 0),
 						containsRatio(3, 5, 7, 0, 1, 0),
 						containsRatio(4, 9, 2, 0, 0, 1)));
-	}
-
-	@Test
-	public void testAgumentVector() {
-		assertThat(
-				magic.agument(new RationalVector(RationalNumber.ONE,
-						RationalNumber.create(2), RationalNumber.create(3))),
-				hasRows(containsRatio(8, 1, 6, 1), containsRatio(3, 5, 7, 2),
-						containsRatio(4, 9, 2, 3)));
 	}
 
 	@Test
@@ -133,15 +124,6 @@ public class RationalArrayTest {
 	}
 
 	@Test
-	public void testMultiplyVector() {
-		assertThat(
-				magic.mul(new RationalVector(RationalNumber.ONE, RationalNumber
-						.create(2), RationalNumber.create(3))),
-				hasProperty("values",
-						containsRatio(8 + 2 + 18, 3 + 10 + 21, 4 + 18 + 6)));
-	}
-
-	@Test
 	public void testNeg() {
 		assertThat(
 				magic.neg(),
@@ -158,7 +140,7 @@ public class RationalArrayTest {
 	@Test
 	public void testReduce() {
 		assertThat(
-				magic.agument(RationalArray.identity(3)).reduce(),
+				magic.agumentCol(RationalArray.identity(3)).reduce(),
 				hasRows(containsRatio(ratio(1, 1), ratio(0, 1), ratio(0, 1),
 						ratio(53, 360), ratio(-13, 90), ratio(23, 360)),
 						containsRatio(ratio(0, 1), ratio(1, 1), ratio(0, 1),
@@ -189,6 +171,11 @@ public class RationalArrayTest {
 				magic.sub(RationalArray.identity(3)),
 				hasRows(containsRatio(7, 1, 6), containsRatio(3, 4, 7),
 						containsRatio(4, 9, 1)));
+	}
+
+	@Test
+	public void testToString() {
+		assertThat(magic, hasToString("[8, 1, 6; 3, 5, 7; 4, 9, 2]"));
 	}
 
 	@Test
