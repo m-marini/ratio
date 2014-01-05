@@ -38,20 +38,6 @@ public class DefsSerializer implements XmlConstants {
 	private static final Attributes EMPTY_ATTRIBUTES = null;
 
 	/**
-	 * @param f
-	 * @return
-	 * @throws IOException
-	 * @throws SAXException
-	 * @throws ParserConfigurationException
-	 */
-	public Map<String, String> load(final File f) throws SAXException,
-			IOException, ParserConfigurationException {
-		final DefsHandler h = new DefsHandler();
-		createParser().parse(f, h);
-		return h.getDefs();
-	}
-
-	/**
 	 * @return
 	 * @throws SAXException
 	 * @throws ParserConfigurationException
@@ -64,6 +50,41 @@ public class DefsSerializer implements XmlConstants {
 				XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(
 				getClass().getResource("/defs-0.1.0.xsd")));
 		return f.newSAXParser();
+	}
+
+	/**
+	 * 
+	 * @param wirter
+	 * @return
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerConfigurationException
+	 * @throws SAXException
+	 */
+	protected TransformerHandler createTransformerHandler(final Writer writer)
+			throws TransformerFactoryConfigurationError,
+			TransformerConfigurationException, SAXException {
+		final Result result = new StreamResult(writer);
+		final SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory
+				.newInstance();
+		final TransformerHandler handler = tf.newTransformerHandler();
+		final Transformer tr = handler.getTransformer();
+		tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+		handler.setResult(result);
+		return handler;
+	}
+
+	/**
+	 * @param f
+	 * @return
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	public Map<String, String> load(final File f) throws SAXException,
+			IOException, ParserConfigurationException {
+		final DefsHandler h = new DefsHandler();
+		createParser().parse(f, h);
+		return h.getDefs();
 	}
 
 	/**
@@ -94,26 +115,5 @@ public class DefsSerializer implements XmlConstants {
 		t.endDocument();
 		w.close();
 
-	}
-
-	/**
-	 * 
-	 * @param wirter
-	 * @return
-	 * @throws TransformerFactoryConfigurationError
-	 * @throws TransformerConfigurationException
-	 * @throws SAXException
-	 */
-	protected TransformerHandler createTransformerHandler(final Writer writer)
-			throws TransformerFactoryConfigurationError,
-			TransformerConfigurationException, SAXException {
-		final Result result = new StreamResult(writer);
-		final SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory
-				.newInstance();
-		final TransformerHandler handler = tf.newTransformerHandler();
-		final Transformer tr = handler.getTransformer();
-		tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-		handler.setResult(result);
-		return handler;
 	}
 }

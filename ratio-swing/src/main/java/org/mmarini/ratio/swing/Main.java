@@ -37,13 +37,19 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.PlainDocument;
+import javax.swing.text.JTextComponent;
 
+import org.mmarini.ratio.interpreter.ArrayValue;
+import org.mmarini.ratio.interpreter.ErrorValue;
 import org.mmarini.ratio.interpreter.Interpreter;
+import org.mmarini.ratio.interpreter.ParserException;
+import org.mmarini.ratio.interpreter.ScalarValue;
 import org.mmarini.ratio.interpreter.Value;
+import org.mmarini.ratio.interpreter.ValueVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,66 +77,67 @@ public class Main {
 	private final AbstractAction saveAsAction;
 	private final AbstractAction restoreAction;
 	private final AbstractAction applyAction;
-	private final ExpressionTableModel expTable;
+	private final ExpressionTableModel expTableModel;
 	private final JSplitPane splitPane;
 	private Map<String, String> defs;
 	private Interpreter interpreter;
 	private final JFileChooser fileChooser;
-	private final PlainDocument editingDoc;
-	private final PlainDocument errorDoc;
-	private final PlainDocument valueDoc;
+	private final JTable expTable;
+	private final JTextField idField;
+	private final JTextArea editingField;
+	private final JTextArea errorField;
+	private final JTextArea valueField;
 
 	/**
 	 * 
 	 */
 	public Main() {
-		frame = new JFrame(Messages.getString("Main.title")); //$NON-NLS-1$
-		editingDoc = new PlainDocument();
-		errorDoc = new PlainDocument();
-		valueDoc = new PlainDocument();
+
+		frame = new JFrame(""); //$NON-NLS-1$
 		defs = new HashMap<>();
-		expTable = new ExpressionTableModel();
-		fileChooser = new JFileChooser(new File("."));
+		expTableModel = new ExpressionTableModel();
+		fileChooser = new JFileChooser(new File(".")); //$NON-NLS-1$
+		idField = new JTextField(10);
+		editingField = new JTextArea();
+		errorField = new JTextArea();
+		valueField = new JTextArea();
+
 		addExpAction = new AbstractAction(
-				Messages.getString("Main.addExp.text")) {
+				Messages.getString("Main.addExp.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = -5766508291490276836L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				// TODO Auto-generated method stub
-
+				addExpression();
 			}
 		};
 		deleteAction = new AbstractAction(
-				Messages.getString("Main.delete.text")) {
+				Messages.getString("Main.delete.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = -6668398794253288377L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				// TODO Auto-generated method stub
-
+				delete();
 			}
 		};
 		restoreAction = new AbstractAction(
-				Messages.getString("Main.restore.text")) {
+				Messages.getString("Main.restore.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 8383595489191445967L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				// TODO Auto-generated method stub
-
+				selectExp();
 			}
 		};
-		applyAction = new AbstractAction(Messages.getString("Main.apply.text")) {
+		applyAction = new AbstractAction(Messages.getString("Main.apply.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 8383595489191445967L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
-				// TODO Auto-generated method stub
-
+				apply();
 			}
 		};
-		newAction = new AbstractAction(Messages.getString("Main.new.text")) {
+		newAction = new AbstractAction(Messages.getString("Main.new.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = -5621162954617830047L;
 
 			@Override
@@ -140,7 +147,7 @@ public class Main {
 				process();
 			}
 		};
-		openAction = new AbstractAction(Messages.getString("Main.open.text")) {
+		openAction = new AbstractAction(Messages.getString("Main.open.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 4818687628170975007L;
 
 			@Override
@@ -148,7 +155,7 @@ public class Main {
 				open();
 			}
 		};
-		saveAction = new AbstractAction(Messages.getString("Main.save.text")) {
+		saveAction = new AbstractAction(Messages.getString("Main.save.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = 6076144582375870703L;
 
 			@Override
@@ -157,7 +164,7 @@ public class Main {
 			}
 		};
 		saveAsAction = new AbstractAction(
-				Messages.getString("Main.saveAs.text")) {
+				Messages.getString("Main.saveAs.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = -7948173877913109561L;
 
 			@Override
@@ -165,7 +172,7 @@ public class Main {
 				saveAs();
 			}
 		};
-		exitAction = new AbstractAction(Messages.getString("Main.exit.text")) {
+		exitAction = new AbstractAction(Messages.getString("Main.exit.text")) { //$NON-NLS-1$
 			private static final long serialVersionUID = -5766508291490276836L;
 
 			@Override
@@ -173,12 +180,38 @@ public class Main {
 				frame.dispose();
 			}
 		};
+		expTable = new JTable(expTableModel);
+		expTable.setAutoCreateRowSorter(true);
+		expTable.getSelectionModel().setSelectionMode(
+				ListSelectionModel.SINGLE_SELECTION);
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-				new JScrollPane(new JTable(expTable)), createExpEditor());
+				new JScrollPane(expTable), createEditor());
+
+		expTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(final ListSelectionEvent e) {
+						if (!e.getValueIsAdjusting())
+							selectExp();
+					}
+				});
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(800, 600);
 		frame.setJMenuBar(createMenuBar());
+
+		idField.setEnabled(false);
+
+		editingField.setRows(5);
+		editingField.invalidate();
+		editingField.setEnabled(false);
+
+		errorField.setRows(3);
+		errorField.invalidate();
+		errorField.setEditable(false);
+
+		valueField.setEditable(false);
 
 		final Container c = frame.getContentPane();
 		c.setLayout(new BorderLayout());
@@ -186,50 +219,121 @@ public class Main {
 		c.add(createContent(), BorderLayout.CENTER);
 		saveAction.setEnabled(false);
 		deleteAction.setEnabled(false);
-		fileChooser.setFileFilter(new FileNameExtensionFilter("Definitions",
-				"xml"));
+		fileChooser.setFileFilter(new FileNameExtensionFilter(Messages
+				.getString("Main.filetype.text"), //$NON-NLS-1$
+				"xml")); //$NON-NLS-1$
+	}
+
+	/**
+	 * 
+	 * @param container
+	 * @param comp
+	 * @param constraints
+	 */
+	private void addComponent(final Container container, final Component comp,
+			final GridBagConstraints constraints) {
+		final GridBagLayout l = (GridBagLayout) container.getLayout();
+		l.setConstraints(comp, constraints);
+		container.add(comp);
+	}
+
+	/**
+	 * 
+	 */
+	private void addExpression() {
+		String id;
+		for (int i = 1;; ++i) {
+			id = "exp_" + i; //$NON-NLS-1$
+			if (!defs.containsKey(id))
+				break;
+		}
+		defs.put(id, "0"); //$NON-NLS-1$
+		process();
+		select(id);
+	}
+
+	/**
+	 * 
+	 */
+	private void apply() {
+		final int row = expTable.getSelectedRow();
+		if (row >= 0) {
+			final String oldId = expTable.getValueAt(row, 0).toString();
+			final String newId = idField.getText();
+			final String exp = editingField.getText();
+			if (!newId.matches("\\w*")) { //$NON-NLS-1$
+				showMessage("Main.notAnIdentifier.text", newId); //$NON-NLS-1$
+				return;
+			}
+			if (!newId.equals(oldId) && defs.containsKey(newId)) {
+				showMessage("Main.alreadyDefined", newId); //$NON-NLS-1$
+				return;
+			}
+			defs.remove(oldId);
+			defs.put(newId, exp);
+			process();
+			select(newId);
+		}
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private Component createContent() {
+		return splitPane;
 	}
 
 	/**
 	 * @return
 	 */
-	private Component createExpEditor() {
+	private Component createEditor() {
 
 		final JPanel p = new JPanel();
 		p.setLayout(new GridBagLayout());
 		final GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(2, 2, 2, 2);
 
-		addComponent(p, new JLabel("Identifier"), gbc);
+		addComponent(p,
+				new JLabel(Messages.getString("Main.identifier.text")), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		addComponent(p, new JTextField(), gbc);
+		gbc.fill = GridBagConstraints.NONE;
+		addComponent(p, idField, gbc);
+
+		gbc.weightx = 0;
+		gbc.weighty = 0;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.fill = GridBagConstraints.BOTH;
+		addComponent(
+				p,
+				createEditorPane(editingField,
+						Messages.getString("Main.expression.text")), gbc); //$NON-NLS-1$
+
+		gbc.weightx = 0;
+		gbc.weighty = 0;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.fill = GridBagConstraints.BOTH;
+		addComponent(
+				p,
+				createEditorPane(errorField,
+						Messages.getString("Main.error.text")), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(p, createEditor(editingDoc, "Expression", true), gbc);
-
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(p, createEditor(errorDoc, "Error", false), gbc);
-
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(p, createEditor(valueDoc, "Values", false), gbc);
+		addComponent(
+				p,
+				createEditorPane(valueField,
+						Messages.getString("Main.value.text")), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.weighty = 0;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
-		addComponent(p, createApplyPane(), gbc);
+		addComponent(p, createEditorBar(), gbc);
 
 		return p;
 	}
@@ -237,9 +341,11 @@ public class Main {
 	/**
 	 * @return
 	 */
-	private JComponent createApplyPane() {
+	private JComponent createEditorBar() {
 		final Box b = Box.createHorizontalBox();
 		b.add(Box.createHorizontalGlue());
+		b.add(new JButton(deleteAction));
+		b.add(Box.createHorizontalStrut(10));
 		b.add(new JButton(restoreAction));
 		b.add(Box.createHorizontalStrut(10));
 		b.add(new JButton(applyAction));
@@ -247,47 +353,62 @@ public class Main {
 	}
 
 	/**
-	 * 
-	 * @param doc
+	 * @param field
 	 * @param title
-	 * @param editable
 	 * @return
 	 */
-	private JComponent createEditor(final Document doc, final String title,
-			final boolean editable) {
-		final JTextArea t = new JTextArea(doc);
-		t.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-		t.setEditable(editable);
-		final JScrollPane sp = new JScrollPane(t);
+	private Component createEditorPane(final JTextComponent field,
+			final String title) {
+		field.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+		final JScrollPane sp = new JScrollPane(field);
 		sp.setBorder(BorderFactory.createTitledBorder(title));
 		return sp;
 	}
 
 	/**
 	 * 
+	 * @return
 	 */
-	private void saveAs() {
-		if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
-			final File f = fileChooser.getSelectedFile();
-			if (!f.exists()
-					|| JOptionPane.showConfirmDialog(frame, String.format(
-							"Do you want overwrite the file\n%s? ", f),
-							"Warning", JOptionPane.YES_NO_OPTION,
-							JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION)
-				save();
-		}
+	private JMenuBar createMenuBar() {
+		final JMenu fm = new JMenu(""); //$NON-NLS-1$
+		fm.add(newAction);
+		fm.add(openAction);
+		fm.add(new JSeparator());
+		fm.add(saveAction);
+		fm.add(saveAsAction);
+		fm.add(new JSeparator());
+		fm.add(exitAction);
+		final JMenu em = new JMenu(""); //$NON-NLS-1$
+		em.add(addExpAction);
+		final JMenuBar b = new JMenuBar();
+		b.add(fm);
+		b.add(em);
+		return b;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private JToolBar createToolBar() {
+		final JToolBar t = new JToolBar();
+		t.add(newAction);
+		t.add(openAction);
+		t.add(saveAction);
+		t.add(saveAsAction);
+		t.add(addExpAction);
+		return t;
 	}
 
 	/**
 	 * 
 	 */
-	private void save() {
-		final File f = fileChooser.getSelectedFile();
-		try {
-			new DefsSerializer().save(f, defs);
-		} catch (final Exception e) {
-			showMessage(e);
-			saveAction.setEnabled(false);
+	private void delete() {
+		final int row = expTable.getSelectedRow();
+		if (row >= 0) {
+			final String id = expTable.getValueAt(row, 0).toString();
+			defs.remove(id);
+			process();
 		}
 	}
 
@@ -308,98 +429,6 @@ public class Main {
 	}
 
 	/**
-	 * @param e
-	 */
-	private void showMessage(final Exception e) {
-		logger.error(e.getMessage(), e);
-		JOptionPane.showMessageDialog(frame, e.getMessage(), "Error",
-				JOptionPane.ERROR_MESSAGE);
-	}
-
-	/**
-	 * 
-	 * @param container
-	 * @param comp
-	 * @param constraints
-	 */
-	private void addComponent(final Container container, final Component comp,
-			final GridBagConstraints constraints) {
-		final GridBagLayout l = (GridBagLayout) container.getLayout();
-		l.setConstraints(comp, constraints);
-		container.add(comp);
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	private Component createContent() {
-		return splitPane;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	private JMenuBar createMenuBar() {
-		final JMenu fm = new JMenu(Messages.getString("Main.file.text")); //$NON-NLS-1$
-		fm.add(newAction);
-		fm.add(openAction);
-		fm.add(new JSeparator());
-		fm.add(saveAction);
-		fm.add(saveAsAction);
-		fm.add(new JSeparator());
-		fm.add(exitAction);
-		final JMenu em = new JMenu(Messages.getString("Main.edit.text")); //$NON-NLS-1$
-		em.add(addExpAction);
-		em.add(deleteAction);
-		final JMenuBar b = new JMenuBar();
-		b.add(fm);
-		b.add(em);
-		return b;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	private JToolBar createToolBar() {
-		final JToolBar t = new JToolBar();
-		t.add(newAction);
-		t.add(openAction);
-		t.add(saveAction);
-		t.add(saveAsAction);
-		t.add(addExpAction);
-		t.add(deleteAction);
-		return t;
-	}
-
-	/**
-	 * 
-	 */
-	private void run() {
-		frame.setVisible(true);
-		final double r = 1. / 2.;
-		splitPane.setDividerLocation(r);
-		splitPane.setResizeWeight(r);
-		process();
-		setEditingText("prova");
-	}
-
-	/**
-	 * 
-	 * @param text
-	 */
-	private void setEditingText(final String text) {
-		try {
-			editingDoc.remove(0, editingDoc.getLength());
-			editingDoc.insertString(0, text, null);
-		} catch (final BadLocationException e) {
-			logger.error(e.getMessage(), e);
-		}
-	}
-
-	/**
 	 * 
 	 */
 	private void process() {
@@ -410,6 +439,151 @@ public class Main {
 			final String id = e.getKey();
 			l.add(new ExpressionDef(id, e.getValue(), values.get(id).toString()));
 		}
-		expTable.setExpressions(l);
+		expTableModel.setExpressions(l);
+		selectExp();
+	}
+
+	/**
+	 * 
+	 */
+	private void run() {
+		frame.setVisible(true);
+		final double r = 1. / 3.;
+		splitPane.setDividerLocation(r);
+		splitPane.setResizeWeight(r);
+		process();
+	}
+
+	/**
+	 * 
+	 */
+	private void save() {
+		final File f = fileChooser.getSelectedFile();
+		try {
+			new DefsSerializer().save(f, defs);
+		} catch (final Exception e) {
+			showMessage(e);
+			saveAction.setEnabled(false);
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void saveAs() {
+		if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
+			final File f = fileChooser.getSelectedFile();
+			if (!f.exists()
+					|| JOptionPane
+							.showConfirmDialog(
+									frame,
+									String.format(
+											Messages.getString("Main.ovverrideFile.text"), f), //$NON-NLS-1$
+									Messages.getString("Main.warinig.text"), JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
+									JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION)
+				save();
+		}
+	}
+
+	/**
+	 * @param id
+	 */
+	private void select(final String id) {
+		final ListSelectionModel m = expTable.getSelectionModel();
+		m.clearSelection();
+		for (int i = 0; i < expTable.getRowCount(); ++i)
+			if (expTable.getValueAt(i, 0).equals(id)) {
+				m.setSelectionInterval(i, i);
+				break;
+			}
+	}
+
+	/**
+	 *
+	 */
+	private void selectExp() {
+		final int row = expTable.getSelectedRow();
+		if (row >= 0) {
+			final String id = expTable.getValueAt(row, 0).toString();
+			idField.setText(id);
+			idField.setEnabled(true);
+			editingField.setText(defs.get(id));
+			editingField.setEnabled(true);
+			showValue(interpreter.getValues().get(id));
+			deleteAction.setEnabled(true);
+		} else {
+			idField.setText(""); //$NON-NLS-1$
+			idField.setEnabled(false);
+			editingField.setText(""); //$NON-NLS-1$
+			editingField.setEnabled(false);
+			errorField.setText(""); //$NON-NLS-1$
+			valueField.setText(""); //$NON-NLS-1$
+			deleteAction.setEnabled(false);
+		}
+	}
+
+	/**
+	 * @param e
+	 */
+	private void showMessage(final Exception e) {
+		logger.error(e.getMessage(), e);
+		JOptionPane.showMessageDialog(frame, e.getMessage(),
+				Messages.getString("Main.error.title"), //$NON-NLS-1$
+				JOptionPane.ERROR_MESSAGE);
+	}
+
+	/**
+	 * @param key
+	 * @param args
+	 */
+	private void showMessage(final String key, final Object... args) {
+		JOptionPane.showMessageDialog(frame,
+				String.format(Messages.getString(key), args),
+				Messages.getString("Main.message.title"), //$NON-NLS-1$
+				JOptionPane.WARNING_MESSAGE);
+	}
+
+	/**
+	 * @param value
+	 */
+	private void showValue(final Value value) {
+		try {
+			errorField.setText(value.apply(new ValueVisitor<String>() {
+
+				@Override
+				public String visit(final ArrayValue value) {
+					return ""; //$NON-NLS-1$
+				}
+
+				@Override
+				public String visit(final ErrorValue value) {
+					return value.getException().getDescription();
+				}
+
+				@Override
+				public String visit(final ScalarValue value) {
+					return ""; //$NON-NLS-1$
+				}
+			}));
+			valueField.setText(value.apply(new ValueVisitor<String>() {
+
+				@Override
+				public String visit(final ArrayValue value) {
+					return value.toString();
+				}
+
+				@Override
+				public String visit(final ErrorValue value) {
+					return value.toString();
+				}
+
+				@Override
+				public String visit(final ScalarValue value) {
+					return value.toString();
+				}
+			}));
+		} catch (final ParserException e) {
+			logger.error(e.getMessage(), e);
+		}
 	}
 }

@@ -13,7 +13,8 @@ import javax.swing.table.AbstractTableModel;
  */
 public class ExpressionTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = 594306141901592641L;
-	private static final String[] COLUMN_NAME = { "Id", "Expression", "Value" };
+	private static final String[] COLUMN_NAME = {
+			Messages.getString("ExpressionTableModel.id.text"), Messages.getString("ExpressionTableModel.expression.text"), Messages.getString("ExpressionTableModel.value.text") }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 	private List<ExpressionDef> expressions;
 
@@ -35,7 +36,7 @@ public class ExpressionTableModel extends AbstractTableModel {
 	 * @see javax.swing.table.AbstractTableModel#getColumnName(int)
 	 */
 	@Override
-	public String getColumnName(int column) {
+	public String getColumnName(final int column) {
 		return COLUMN_NAME[column];
 	}
 
@@ -65,7 +66,7 @@ public class ExpressionTableModel extends AbstractTableModel {
 			v = e.getValue();
 			break;
 		default:
-			v = "?";
+			v = "?"; //$NON-NLS-1$
 			break;
 		}
 		return v;
@@ -75,7 +76,7 @@ public class ExpressionTableModel extends AbstractTableModel {
 	 * @param expressions
 	 *            the expressions to set
 	 */
-	public void setExpressions(List<ExpressionDef> expressions) {
+	public void setExpressions(final List<ExpressionDef> expressions) {
 		this.expressions = expressions;
 		fireTableDataChanged();
 	}
