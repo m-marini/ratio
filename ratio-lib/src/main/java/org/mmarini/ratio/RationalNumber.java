@@ -49,6 +49,14 @@ public class RationalNumber extends Number implements
 	 * 
 	 * @return
 	 */
+	public boolean isInteger() {
+		return lower == 1;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
 	public RationalNumber abs() {
 		return new RationalNumber(Math.abs(upper), lower);
 	}

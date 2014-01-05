@@ -358,4 +358,29 @@ public class RationalArray {
 				v[j][i] = values[i][j];
 		return new RationalArray(v);
 	}
+
+	/**
+	 * @return
+	 */
+	public int getColumnCount() {
+		return values[0].length;
+	}
+
+	/**
+	 * @return
+	 */
+	public int getRowCount() {
+		return values.length;
+	}
+
+	/**
+	 * @param i
+	 * @param size
+	 * @return
+	 */
+	public RationalArray sliceRow(final int i, final int size) {
+		final RationalNumber[][] v = new RationalNumber[size][];
+		System.arraycopy(values, i, v, 0, size);
+		return new RationalArray(v);
+	}
 }

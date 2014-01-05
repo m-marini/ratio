@@ -26,12 +26,10 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -43,6 +41,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.JTextComponent;
 
+import org.mmarini.ratio.RationalNumber;
 import org.mmarini.ratio.interpreter.ArrayValue;
 import org.mmarini.ratio.interpreter.ErrorValue;
 import org.mmarini.ratio.interpreter.Interpreter;
@@ -101,43 +100,41 @@ public class Main {
 		editingField = new JTextArea();
 		errorField = new JTextArea();
 		valueField = new JTextArea();
+		final ActionBuilder ab = new ActionBuilder();
 
-		addExpAction = new AbstractAction(
-				Messages.getString("Main.addExp.text")) { //$NON-NLS-1$
+		addExpAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -5766508291490276836L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				addExpression();
 			}
-		};
-		deleteAction = new AbstractAction(
-				Messages.getString("Main.delete.text")) { //$NON-NLS-1$
+		}, "addExpAction");
+		deleteAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -6668398794253288377L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				delete();
 			}
-		};
-		restoreAction = new AbstractAction(
-				Messages.getString("Main.restore.text")) { //$NON-NLS-1$
+		}, "deleteAction");
+		restoreAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 8383595489191445967L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				selectExp();
 			}
-		};
-		applyAction = new AbstractAction(Messages.getString("Main.apply.text")) { //$NON-NLS-1$
+		}, "restoreAction");
+		applyAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 8383595489191445967L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				apply();
 			}
-		};
-		newAction = new AbstractAction(Messages.getString("Main.new.text")) { //$NON-NLS-1$
+		}, "applyAction");
+		newAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -5621162954617830047L;
 
 			@Override
@@ -146,40 +143,40 @@ public class Main {
 				saveAction.setEnabled(false);
 				process();
 			}
-		};
-		openAction = new AbstractAction(Messages.getString("Main.open.text")) { //$NON-NLS-1$
+		}, "newAction");
+		openAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 4818687628170975007L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				open();
 			}
-		};
-		saveAction = new AbstractAction(Messages.getString("Main.save.text")) { //$NON-NLS-1$
+		}, "openAction");
+		saveAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 6076144582375870703L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				save();
 			}
-		};
-		saveAsAction = new AbstractAction(
-				Messages.getString("Main.saveAs.text")) { //$NON-NLS-1$
+		}, "saveAction");
+		saveAsAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -7948173877913109561L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				saveAs();
 			}
-		};
-		exitAction = new AbstractAction(Messages.getString("Main.exit.text")) { //$NON-NLS-1$
+		}, "saveAsAction");
+		exitAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -5766508291490276836L;
 
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				frame.dispose();
 			}
-		};
+		}, "exitAction");
+
 		expTable = new JTable(expTableModel);
 		expTable.setAutoCreateRowSorter(true);
 		expTable.getSelectionModel().setSelectionMode(
@@ -300,12 +297,14 @@ public class Main {
 		gbc.weightx = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.NONE;
+		gbc.anchor = GridBagConstraints.WEST;
 		addComponent(p, idField, gbc);
 
 		gbc.weightx = 0;
 		gbc.weighty = 0;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
+		gbc.anchor = GridBagConstraints.CENTER;
 		addComponent(
 				p,
 				createEditorPane(editingField,
@@ -370,20 +369,9 @@ public class Main {
 	 * @return
 	 */
 	private JMenuBar createMenuBar() {
-		final JMenu fm = new JMenu(""); //$NON-NLS-1$
-		fm.add(newAction);
-		fm.add(openAction);
-		fm.add(new JSeparator());
-		fm.add(saveAction);
-		fm.add(saveAsAction);
-		fm.add(new JSeparator());
-		fm.add(exitAction);
-		final JMenu em = new JMenu(""); //$NON-NLS-1$
-		em.add(addExpAction);
-		final JMenuBar b = new JMenuBar();
-		b.add(fm);
-		b.add(em);
-		return b;
+		return new ActionBuilder().createMenuBar("file", newAction, openAction,
+				null, saveAction, saveAsAction, null, exitAction, "edit",
+				addExpAction);
 	}
 
 	/**
@@ -391,13 +379,8 @@ public class Main {
 	 * @return
 	 */
 	private JToolBar createToolBar() {
-		final JToolBar t = new JToolBar();
-		t.add(newAction);
-		t.add(openAction);
-		t.add(saveAction);
-		t.add(saveAsAction);
-		t.add(addExpAction);
-		return t;
+		return new ActionBuilder().createHorizontalToolBar(newAction,
+				openAction, saveAction, saveAsAction, null, addExpAction, null);
 	}
 
 	/**
@@ -569,7 +552,7 @@ public class Main {
 
 				@Override
 				public String visit(final ArrayValue value) {
-					return value.toString();
+					return composeArrayValue(value.getValue().getValues());
 				}
 
 				@Override
@@ -585,5 +568,54 @@ public class Main {
 		} catch (final ParserException e) {
 			logger.error(e.getMessage(), e);
 		}
+	}
+
+	/**
+	 * @param values
+	 * @return
+	 */
+	private String composeArrayValue(final RationalNumber[][] values) {
+		final int n = values.length;
+		final int m = values[0].length;
+		final String[][] v = new String[n][m];
+		int l = 0;
+		for (int i = 0; i < n; ++i)
+			for (int j = 0; j < m; ++j) {
+				final String s = String.valueOf(values[i][j]);
+				final int k = s.length();
+				if (k > l)
+					l = k;
+				v[i][j] = s;
+			}
+
+		final StringBuilder b = new StringBuilder();
+		boolean firstRow = true;
+		for (final String[] r : v) {
+			if (firstRow)
+				firstRow = false;
+			else
+				b.append('\n');
+			boolean firstCell = true;
+			for (final String c : r) {
+				if (firstCell)
+					firstCell = false;
+				else
+					b.append(' ');
+				b.append(fill(c, l));
+			}
+		}
+		return b.toString();
+	}
+
+	/**
+	 * @param c
+	 * @param l
+	 * @return
+	 */
+	private String fill(final String c, final int l) {
+		final StringBuilder b = new StringBuilder(c);
+		while (b.length() < l)
+			b.append(' ');
+		return b.toString();
 	}
 }
