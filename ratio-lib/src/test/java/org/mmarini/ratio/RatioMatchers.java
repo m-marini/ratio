@@ -43,8 +43,13 @@ public class RatioMatchers {
 	}
 
 	public static Matcher<Interpreter> hasInterpreterValue(final String id,
-			final String value) {
+			final Matcher<String> value) {
 		return hasProperty("values", hasEntry(equalTo(id), hasToString(value)));
+	}
+
+	public static Matcher<Interpreter> hasInterpreterValue(final String id,
+			final String value) {
+		return hasInterpreterValue(id, equalTo(value));
 	}
 
 	@SafeVarargs

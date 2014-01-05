@@ -86,7 +86,7 @@ public class RationalArray {
 		final int mo = o.values[0].length;
 		if (n != no)
 			throw new IllegalArgumentException(
-					"Agument of different dimensions arrays " + n + "x" + m
+					"Augment of different dimensions arrays " + n + "x" + m
 							+ " != " + no + "x" + mo);
 
 		final RationalNumber[][] v = new RationalNumber[n][m + mo];
@@ -107,7 +107,7 @@ public class RationalArray {
 		final int m = values[0].length;
 		if (n != 1)
 			throw new IllegalArgumentException(
-					"Agument of different dimensions arrays " + n + "x" + m
+					"Augment of different dimensions arrays " + n + "x" + m
 							+ " != 1");
 
 		final RationalNumber[][] v = new RationalNumber[n][m + 1];
@@ -128,7 +128,7 @@ public class RationalArray {
 		final int mo = vo[0].length;
 		if (m != mo)
 			throw new IllegalArgumentException(
-					"Agument of different dimensions arrays " + n + "x" + m
+					"Augment of different dimensions arrays " + n + "x" + m
 							+ " != " + no + "x" + mo);
 
 		final RationalNumber[][] v = new RationalNumber[n + no][m];
@@ -155,13 +155,8 @@ public class RationalArray {
 	 * @return
 	 */
 	public RationalNumber det() {
-		final int n = values.length;
-		final int m = values[0].length;
-		if (n != m)
-			throw new IllegalArgumentException("Inverse of not square array "
-					+ n + "x" + m);
 		final GaussAlgorithm g = new GaussAlgorithm(
-				clone(agumentCol(identity(n)).values));
+				clone(agumentCol(identity(values.length)).values));
 		return g.isTriangular() ? g.getDeterminer() : RationalNumber.ZERO;
 	}
 
@@ -180,6 +175,20 @@ public class RationalArray {
 		if (!Arrays.deepEquals(values, other.values))
 			return false;
 		return true;
+	}
+
+	/**
+	 * @return
+	 */
+	public int getColumnCount() {
+		return values[0].length;
+	}
+
+	/**
+	 * @return
+	 */
+	public int getRowCount() {
+		return values.length;
 	}
 
 	/**
@@ -212,6 +221,8 @@ public class RationalArray {
 					+ n + "x" + m);
 		final GaussAlgorithm g = new GaussAlgorithm(
 				clone(agumentCol(identity(n)).values));
+		if (!g.isTriangular())
+			throw new IllegalArgumentException("divide by 0");
 		return new RationalArray(g.getArray()).sliceCol(n, n);
 	}
 
@@ -227,7 +238,7 @@ public class RationalArray {
 		final int ma = va[0].length;
 		if (m != na)
 			throw new IllegalArgumentException(
-					"Multyply of different dimensions arrays " + n + "x" + m
+					"Multiply of different dimensions arrays " + n + "x" + m
 							+ " != " + na + "x" + ma);
 
 		final RationalNumber[][] v = new RationalNumber[n][ma];
@@ -300,6 +311,17 @@ public class RationalArray {
 	}
 
 	/**
+	 * @param i
+	 * @param size
+	 * @return
+	 */
+	public RationalArray sliceRow(final int i, final int size) {
+		final RationalNumber[][] v = new RationalNumber[size][];
+		System.arraycopy(values, i, v, 0, size);
+		return new RationalArray(v);
+	}
+
+	/**
 	 * @param a
 	 * @return
 	 */
@@ -349,6 +371,17 @@ public class RationalArray {
 	/**
 	 * @return
 	 */
+	public RationalNumber trace() {
+		final int n = Math.min(values.length, values[0].length);
+		RationalNumber t = RationalNumber.ZERO;
+		for (int i = 0; i < n; ++i)
+			t = t.add(values[i][i]);
+		return t;
+	}
+
+	/**
+	 * @return
+	 */
 	public RationalArray transpose() {
 		final int n = values.length;
 		final int m = values[0].length;
@@ -356,31 +389,6 @@ public class RationalArray {
 		for (int i = 0; i < n; ++i)
 			for (int j = 0; j < m; ++j)
 				v[j][i] = values[i][j];
-		return new RationalArray(v);
-	}
-
-	/**
-	 * @return
-	 */
-	public int getColumnCount() {
-		return values[0].length;
-	}
-
-	/**
-	 * @return
-	 */
-	public int getRowCount() {
-		return values.length;
-	}
-
-	/**
-	 * @param i
-	 * @param size
-	 * @return
-	 */
-	public RationalArray sliceRow(final int i, final int size) {
-		final RationalNumber[][] v = new RationalNumber[size][];
-		System.arraycopy(values, i, v, 0, size);
 		return new RationalArray(v);
 	}
 }

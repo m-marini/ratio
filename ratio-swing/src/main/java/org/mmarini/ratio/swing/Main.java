@@ -274,6 +274,43 @@ public class Main {
 	}
 
 	/**
+	 * @param values
+	 * @return
+	 */
+	private String composeArrayValue(final RationalNumber[][] values) {
+		final int n = values.length;
+		final int m = values[0].length;
+		final String[][] v = new String[n][m];
+		int l = 0;
+		for (int i = 0; i < n; ++i)
+			for (int j = 0; j < m; ++j) {
+				final String s = String.valueOf(values[i][j]);
+				final int k = s.length();
+				if (k > l)
+					l = k;
+				v[i][j] = s;
+			}
+
+		final StringBuilder b = new StringBuilder();
+		boolean firstRow = true;
+		for (final String[] r : v) {
+			if (firstRow)
+				firstRow = false;
+			else
+				b.append('\n');
+			boolean firstCell = true;
+			for (final String c : r) {
+				if (firstCell)
+					firstCell = false;
+				else
+					b.append(' ');
+				b.append(fill(c, l));
+			}
+		}
+		return b.toString();
+	}
+
+	/**
 	 * 
 	 * @return
 	 */
@@ -393,6 +430,18 @@ public class Main {
 			defs.remove(id);
 			process();
 		}
+	}
+
+	/**
+	 * @param c
+	 * @param l
+	 * @return
+	 */
+	private String fill(final String c, final int l) {
+		final StringBuilder b = new StringBuilder(c);
+		while (b.length() < l)
+			b.append(' ');
+		return b.toString();
 	}
 
 	/**
@@ -568,54 +617,5 @@ public class Main {
 		} catch (final ParserException e) {
 			logger.error(e.getMessage(), e);
 		}
-	}
-
-	/**
-	 * @param values
-	 * @return
-	 */
-	private String composeArrayValue(final RationalNumber[][] values) {
-		final int n = values.length;
-		final int m = values[0].length;
-		final String[][] v = new String[n][m];
-		int l = 0;
-		for (int i = 0; i < n; ++i)
-			for (int j = 0; j < m; ++j) {
-				final String s = String.valueOf(values[i][j]);
-				final int k = s.length();
-				if (k > l)
-					l = k;
-				v[i][j] = s;
-			}
-
-		final StringBuilder b = new StringBuilder();
-		boolean firstRow = true;
-		for (final String[] r : v) {
-			if (firstRow)
-				firstRow = false;
-			else
-				b.append('\n');
-			boolean firstCell = true;
-			for (final String c : r) {
-				if (firstCell)
-					firstCell = false;
-				else
-					b.append(' ');
-				b.append(fill(c, l));
-			}
-		}
-		return b.toString();
-	}
-
-	/**
-	 * @param c
-	 * @param l
-	 * @return
-	 */
-	private String fill(final String c, final int l) {
-		final StringBuilder b = new StringBuilder(c);
-		while (b.length() < l)
-			b.append(' ');
-		return b.toString();
 	}
 }

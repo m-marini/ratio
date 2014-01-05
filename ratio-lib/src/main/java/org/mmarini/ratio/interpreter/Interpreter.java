@@ -11,18 +11,19 @@ import org.mmarini.ratio.RationalNumber;
 
 /**
  * <pre>
- * parse := compose
+ * parse ::= <compose>
  * compose := add { "," add | "row" add | "col" add}
  * add := mul { "+" mul | "-" mul }
  * mul := unary { "*" unary | "/" unary }
- * unary * := plus | negate | determiner | trans | inv | reduce | term 
+ * unary * := plus | negate | determiner | trans | inv | reduce | trace | term 
  * reduce := "reduce" unary
  * plus := "+" unary 
  * negate := "-" unary 
  * determiner := "det" unary 
- * trans:= "trans" unary 
- * inv := "inv" unary 
- * term := integer | identifier | "(" agument ")"
+ * trans ::= "trans" unary 
+ * trace ::= "trace" unary 
+ * inv ::= "inv" unary 
+ * term ::= integer | identifier | "(" agument ")"
  * 
  * </pre>
  * 
@@ -46,6 +47,36 @@ public class Interpreter {
 
 	/**
 	 * <pre>
+	 * add := mul { "+" mul | "-" mul }
+	 * </pre>
+	 * 
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value add(final ParserSource s) throws ParserException {
+		Value e = mul(s);
+		if (e == null)
+			return null;
+		for (;;) {
+			if (litteral(s, "+")) {
+				final Value a = mul(s);
+				if (a == null)
+					throw s.fail("<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }");
+				e = computeAdd(s, e, a);
+			} else if (litteral(s, "-")) {
+				final Value a = mul(s);
+				if (a == null)
+					throw s.fail("<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }");
+				e = computeSub(s, e, a);
+			} else
+				break;
+		}
+		return e;
+	}
+
+	/**
+	 * <pre>
 	 * compose := add { "," add | "row" add | "col" add}
 	 * </pre>
 	 * 
@@ -61,19 +92,19 @@ public class Interpreter {
 			if (litteral(s, ",")) {
 				final Value a = add(s);
 				if (a == null)
-					throw s.fail("<compose> := <add> { ",
+					throw s.fail("<compose> ::= <add> { ",
 							" <add> | \"row\" <add> | \"col\" <add> }");
 				e = computeAugment(s, e, a);
 			} else if (litteral(s, "row")) {
 				final Value a = add(s);
 				if (a == null)
-					throw s.fail("<compose> := <add> { ",
+					throw s.fail("<compose> ::= <add> { ",
 							" <add> | \"row\" <add> | \"col\" <add> }");
 				e = computeSliceRow(s, e, a);
 			} else if (litteral(s, "col")) {
 				final Value a = add(s);
 				if (a == null)
-					throw s.fail("<compose> := <add> { ",
+					throw s.fail("<compose> ::= <add> { ",
 							" <add> | \"row\" <add> | \"col\" <add> }");
 				e = computeSliceCol(s, e, a);
 			} else
@@ -132,7 +163,7 @@ public class Interpreter {
 						@Override
 						public Value visit(final ArrayValue vb1)
 								throws ParserException {
-							throw s.fail("scla expected");
+							throw s.fail("scalar expected");
 						}
 
 						@Override
@@ -161,7 +192,7 @@ public class Interpreter {
 	 * @param b
 	 * @throws ParserException
 	 */
-	private final Value computeSliceRow(final ParserSource s, final Value a,
+	private final Value computeAugment(final ParserSource s, final Value a,
 			final Value b) throws ParserException {
 		try {
 			return a.apply(new ValueVisitor<Value>() {
@@ -174,27 +205,7 @@ public class Interpreter {
 						@Override
 						public Value visit(final ArrayValue vb)
 								throws ParserException {
-							final RationalArray mb = vb.getValue();
-							if (mb.getColumnCount() != 2
-									|| mb.getRowCount() != 1)
-								throw s.fail("array 1 x 2 expected");
-							final RationalNumber ri0 = mb.getValues()[0][0];
-							if (!ri0.isInteger())
-								throw s.fail("%s is not an integer",
-										ri0.toString());
-							final RationalNumber ri1 = mb.getValues()[0][1];
-							if (!ri1.isInteger())
-								throw s.fail("%s is not an integer",
-										ri1.toString());
-							final int i = ri0.intValue();
-							final int j = ri1.intValue();
-							if (i > j)
-								throw s.fail("%d to %d invalid range", i, j);
-							if (i < 0 || i >= mx.getRowCount())
-								throw s.fail("%i index out of range", i);
-							if (j < 0 || j >= mx.getRowCount())
-								throw s.fail("%i index out of range", j);
-							return new ArrayValue(mx.sliceRow(i, j - i + 1));
+							return new ArrayValue(mx.agumentRow(vb.getValue()));
 						}
 
 						@Override
@@ -206,14 +217,8 @@ public class Interpreter {
 						@Override
 						public Value visit(final ScalarValue value)
 								throws ParserException {
-							final RationalNumber sb = value.getValue();
-							if (!sb.isInteger())
-								throw s.fail("%s is not an integer",
-										sb.toString());
-							final int i = sb.intValue();
-							if (i < 0 || i >= mx.getRowCount())
-								throw s.fail("%d index out of range", i);
-							return new ArrayValue(mx.sliceRow(i, 1));
+							return new ArrayValue(mx.agumentCol(value
+									.getValue()));
 						}
 					});
 				}
@@ -226,7 +231,10 @@ public class Interpreter {
 
 				@Override
 				public Value visit(final ScalarValue va) throws ParserException {
-					throw s.fail("array expected");
+					if (!(b instanceof ScalarValue))
+						throw s.fail("scalar expected");
+					return new ArrayValue(va.getValue().augment(
+							((ScalarValue) b).getValue()));
 				}
 			});
 		} catch (final IllegalArgumentException e) {
@@ -236,17 +244,17 @@ public class Interpreter {
 
 	/**
 	 * @param ss
-	 * @param v
+	 * @param unary
 	 * @return
 	 * @throws ParserException
 	 */
-	private Value computeReduce(final ParserSource s, final Value v)
+	private Value computeDet(final ParserSource s, final Value unary)
 			throws ParserException {
-		return v.apply(new ValueVisitor<Value>() {
+		return unary.apply(new ValueVisitor<Value>() {
 
 			@Override
 			public Value visit(final ArrayValue value) throws ParserException {
-				return new ArrayValue(value.getValue().reduce());
+				return new ScalarValue(value.getValue().det());
 			}
 
 			@Override
@@ -256,7 +264,7 @@ public class Interpreter {
 
 			@Override
 			public Value visit(final ScalarValue value) throws ParserException {
-				return new ScalarValue(RationalNumber.ONE);
+				return value;
 			}
 		});
 	}
@@ -332,6 +340,39 @@ public class Interpreter {
 		} catch (final IllegalArgumentException e) {
 			throw s.fail(e, e.getMessage());
 		}
+	}
+
+	/**
+	 * @param s
+	 * @param v
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value computeIdentity(final ParserSource s, final Value v)
+			throws ParserException {
+		return v.apply(new ValueVisitor<Value>() {
+
+			@Override
+			public Value visit(final ArrayValue value) throws ParserException {
+				throw s.fail("scalar expected");
+			}
+
+			@Override
+			public Value visit(final ErrorValue value) throws ParserException {
+				throw value.getException();
+			}
+
+			@Override
+			public Value visit(final ScalarValue value) throws ParserException {
+				final RationalNumber r = value.getValue();
+				if (!r.isInteger())
+					throw s.fail("%s is not an integer", r.toString());
+				final int i = r.intValue();
+				if (i <= 0)
+					throw s.fail("%d invalid value", i);
+				return new ArrayValue(RationalArray.identity(i));
+			}
+		});
 	}
 
 	/**
@@ -469,6 +510,193 @@ public class Interpreter {
 	}
 
 	/**
+	 * @param ss
+	 * @param v
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value computeReduce(final ParserSource s, final Value v)
+			throws ParserException {
+		return v.apply(new ValueVisitor<Value>() {
+
+			@Override
+			public Value visit(final ArrayValue value) throws ParserException {
+				return new ArrayValue(value.getValue().reduce());
+			}
+
+			@Override
+			public Value visit(final ErrorValue value) throws ParserException {
+				throw value.getException();
+			}
+
+			@Override
+			public Value visit(final ScalarValue value) throws ParserException {
+				return new ScalarValue(RationalNumber.ONE);
+			}
+		});
+	}
+
+	/**
+	 * @param <T>
+	 * @param s
+	 * @param a
+	 * @param b
+	 * @throws ParserException
+	 */
+	private final Value computeSliceCol(final ParserSource s, final Value a,
+			final Value b) throws ParserException {
+		try {
+			return a.apply(new ValueVisitor<Value>() {
+
+				@Override
+				public Value visit(final ArrayValue va) throws ParserException {
+					final RationalArray mx = va.getValue();
+					return b.apply(new ValueVisitor<Value>() {
+
+						@Override
+						public Value visit(final ArrayValue vb)
+								throws ParserException {
+							final RationalArray mb = vb.getValue();
+							if (mb.getColumnCount() != 2
+									|| mb.getRowCount() != 1)
+								throw s.fail("array 1 x 2 expected");
+							final RationalNumber ri0 = mb.getValues()[0][0];
+							if (!ri0.isInteger())
+								throw s.fail("%s is not an integer",
+										ri0.toString());
+							final RationalNumber ri1 = mb.getValues()[0][1];
+							if (!ri1.isInteger())
+								throw s.fail("%s is not an integer",
+										ri1.toString());
+							final int i = ri0.intValue();
+							final int j = ri1.intValue();
+							if (i > j)
+								throw s.fail("%d to %d invalid range", i, j);
+							if (i < 0 || i >= mx.getColumnCount())
+								throw s.fail("%d index out of range", i);
+							if (j < 0 || j >= mx.getColumnCount())
+								throw s.fail("%d index out of range", j);
+							return new ArrayValue(mx.sliceCol(i, j - i + 1));
+						}
+
+						@Override
+						public Value visit(final ErrorValue value)
+								throws ParserException {
+							throw value.getException();
+						}
+
+						@Override
+						public Value visit(final ScalarValue value)
+								throws ParserException {
+							final RationalNumber sb = value.getValue();
+							if (!sb.isInteger())
+								throw s.fail("%s is not an integer",
+										sb.toString());
+							final int i = sb.intValue();
+							if (i < 0 || i >= mx.getColumnCount())
+								throw s.fail("%d index out of range", i);
+							return new ArrayValue(mx.sliceCol(i, 1));
+						}
+					});
+				}
+
+				@Override
+				public Value visit(final ErrorValue value)
+						throws ParserException {
+					throw value.getException();
+				}
+
+				@Override
+				public Value visit(final ScalarValue va) throws ParserException {
+					throw s.fail("array expected");
+				}
+			});
+		} catch (final IllegalArgumentException e) {
+			throw s.fail(e, e.getMessage());
+		}
+	}
+
+	/**
+	 * @param <T>
+	 * @param s
+	 * @param a
+	 * @param b
+	 * @throws ParserException
+	 */
+	private final Value computeSliceRow(final ParserSource s, final Value a,
+			final Value b) throws ParserException {
+		try {
+			return a.apply(new ValueVisitor<Value>() {
+
+				@Override
+				public Value visit(final ArrayValue va) throws ParserException {
+					final RationalArray mx = va.getValue();
+					return b.apply(new ValueVisitor<Value>() {
+
+						@Override
+						public Value visit(final ArrayValue vb)
+								throws ParserException {
+							final RationalArray mb = vb.getValue();
+							if (mb.getColumnCount() != 2
+									|| mb.getRowCount() != 1)
+								throw s.fail("array 1 x 2 expected");
+							final RationalNumber ri0 = mb.getValues()[0][0];
+							if (!ri0.isInteger())
+								throw s.fail("%s is not an integer",
+										ri0.toString());
+							final RationalNumber ri1 = mb.getValues()[0][1];
+							if (!ri1.isInteger())
+								throw s.fail("%s is not an integer",
+										ri1.toString());
+							final int i = ri0.intValue();
+							final int j = ri1.intValue();
+							if (i > j)
+								throw s.fail("%d to %d invalid range", i, j);
+							if (i < 0 || i >= mx.getRowCount())
+								throw s.fail("%d index out of range", i);
+							if (j < 0 || j >= mx.getRowCount())
+								throw s.fail("%d index out of range", j);
+							return new ArrayValue(mx.sliceRow(i, j - i + 1));
+						}
+
+						@Override
+						public Value visit(final ErrorValue value)
+								throws ParserException {
+							throw value.getException();
+						}
+
+						@Override
+						public Value visit(final ScalarValue value)
+								throws ParserException {
+							final RationalNumber sb = value.getValue();
+							if (!sb.isInteger())
+								throw s.fail("%s is not an integer",
+										sb.toString());
+							final int i = sb.intValue();
+							if (i < 0 || i >= mx.getRowCount())
+								throw s.fail("%d index out of range", i);
+							return new ArrayValue(mx.sliceRow(i, 1));
+						}
+					});
+				}
+
+				@Override
+				public Value visit(final ErrorValue value)
+						throws ParserException {
+					throw value.getException();
+				}
+
+				@Override
+				public Value visit(final ScalarValue va) throws ParserException {
+					throw s.fail("array expected");
+				}
+			});
+		} catch (final IllegalArgumentException e) {
+			throw s.fail(e, e.getMessage());
+		}
+	}
+
+	/**
 	 * @param <T>
 	 * @param s
 	 * @param va
@@ -542,18 +770,18 @@ public class Interpreter {
 	}
 
 	/**
-	 * @param s
+	 * @param ss
 	 * @param v
 	 * @return
 	 * @throws ParserException
 	 */
-	private Value computeIdentity(final ParserSource s, final Value v)
+	private Value computeTrace(final ParserSource s, final Value v)
 			throws ParserException {
 		return v.apply(new ValueVisitor<Value>() {
 
 			@Override
 			public Value visit(final ArrayValue value) throws ParserException {
-				throw s.fail("scalar expected");
+				return new ScalarValue(value.getValue().trace());
 			}
 
 			@Override
@@ -563,10 +791,34 @@ public class Interpreter {
 
 			@Override
 			public Value visit(final ScalarValue value) throws ParserException {
-				final RationalNumber r = value.getValue();
-				if (r.getLower() != 1)
-					throw s.fail("integer expected");
-				return new ArrayValue(RationalArray.identity(r.intValue()));
+				return value;
+			}
+		});
+	}
+
+	/**
+	 * @param s
+	 * @param v
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value computeTrans(final ParserSource s, final Value v)
+			throws ParserException {
+		return v.apply(new ValueVisitor<Value>() {
+
+			@Override
+			public Value visit(final ArrayValue value) throws ParserException {
+				return new ArrayValue(value.getValue().transpose());
+			}
+
+			@Override
+			public Value visit(final ErrorValue value) throws ParserException {
+				throw value.getException();
+			}
+
+			@Override
+			public Value visit(final ScalarValue value) throws ParserException {
+				return value;
 			}
 		});
 	}
@@ -597,7 +849,7 @@ public class Interpreter {
 		final Value f = values.get(id);
 		if (f != null) {
 			if (f.equals(Value.UNDEFINED))
-				throw s.fail("cycle reference on %s", id);
+				throw s.fail("cyclic reference on %s", id);
 			return f;
 		}
 		final Value v = evaluate(id);
@@ -631,36 +883,6 @@ public class Interpreter {
 	}
 
 	/**
-	 * <pre>
-	 * add := mul { "+" mul | "-" mul }
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value add(final ParserSource s) throws ParserException {
-		Value e = mul(s);
-		if (e == null)
-			return null;
-		for (;;) {
-			if (litteral(s, "+")) {
-				final Value a = mul(s);
-				if (a == null)
-					throw s.fail("<add> := <mul> { \"+\" <mul> | \"-\" <mul> }");
-				e = computeAdd(s, e, a);
-			} else if (litteral(s, "-")) {
-				final Value a = mul(s);
-				if (a == null)
-					throw s.fail("<add> := <mul> { \"+\" <mul> | \"-\" <mul> }");
-				e = computeSub(s, e, a);
-			} else
-				break;
-		}
-		return e;
-	}
-
-	/**
 	 * @return the values
 	 */
 	public Map<String, Value> getValues() {
@@ -679,6 +901,17 @@ public class Interpreter {
 			return null;
 		s.consumeToken();
 		return evaluate(s, id);
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value identity(final ParserSource s) throws ParserException {
+		if (!litteral(s, "I"))
+			return null;
+		return computeIdentity(s, unary(s));
 	}
 
 	/**
@@ -786,7 +1019,7 @@ public class Interpreter {
 	private Value parse(final ParserSource s) throws ParserException {
 		final Value e = compose(s);
 		if (e == null)
-			throw s.fail("<augment> ::= <add> { \",\" <add> }");
+			throw s.fail("<compose> ::= <add> { \",\" <add> }");
 		if (s.getToken() != null)
 			throw s.fail("empty");
 		return e;
@@ -803,6 +1036,21 @@ public class Interpreter {
 	 */
 	private Value plus(final ParserSource s) throws ParserException {
 		return litteral(s, "+") ? unary(s) : null;
+	}
+
+	/**
+	 * <pre>
+	 * reduce := "reduce" unary
+	 * </pre>
+	 * 
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value reduce(final ParserSource s) throws ParserException {
+		if (!litteral(s, "reduce"))
+			return null;
+		return computeReduce(s, unary(s));
 	}
 
 	/**
@@ -824,7 +1072,7 @@ public class Interpreter {
 		if (litteral(s, "(")) {
 			final Value e = compose(s);
 			if (e == null)
-				throw s.fail("<term> := <integer> | <identifier> | \"(\" <augment> \")\"");
+				throw s.fail("<term> ::= <integer> | <identifier> | \"(\" <augment> \")\"");
 			if (!litteral(s, ")"))
 				throw s.fail("\")\"");
 			return e;
@@ -833,23 +1081,34 @@ public class Interpreter {
 	}
 
 	/**
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value trace(final ParserSource s) throws ParserException {
+		if (!litteral(s, "trace"))
+			return null;
+		return computeTrace(s, unary(s));
+	}
+
+	/**
 	 * <pre>
-	 * reduce := "reduce" unary
+	 * trans:= "transpose" unary
 	 * </pre>
 	 * 
 	 * @param s
 	 * @return
 	 * @throws ParserException
 	 */
-	private Value reduce(final ParserSource s) throws ParserException {
-		if (!litteral(s, "reduce"))
+	private Value trans(final ParserSource s) throws ParserException {
+		if (!litteral(s, "trans"))
 			return null;
-		return computeReduce(s, unary(s));
+		return computeTrans(s, unary(s));
 	}
 
 	/**
 	 * <pre>
-	 * unary * := plus | negate | determiner | trans | inv | reduce | term
+	 * unary * := plus | negate | determiner | trans | inv | reduce | trace | identity |term
 	 * </pre>
 	 * 
 	 * @param s
@@ -878,223 +1137,9 @@ public class Interpreter {
 		final Value o7 = reduce(s);
 		if (o7 != null)
 			return o7;
+		final Value o8 = trace(s);
+		if (o8 != null)
+			return o8;
 		return term(s);
-	}
-
-	/**
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value identity(final ParserSource s) throws ParserException {
-		if (!litteral(s, "I"))
-			return null;
-		return computeIdentity(s, unary(s));
-	}
-
-	/**
-	 * @param s
-	 * @param v
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value computeTrans(final ParserSource s, final Value v)
-			throws ParserException {
-		return v.apply(new ValueVisitor<Value>() {
-
-			@Override
-			public Value visit(final ArrayValue value) throws ParserException {
-				return new ArrayValue(value.getValue().transpose());
-			}
-
-			@Override
-			public Value visit(final ErrorValue value) throws ParserException {
-				throw value.getException();
-			}
-
-			@Override
-			public Value visit(final ScalarValue value) throws ParserException {
-				return value;
-			}
-		});
-	}
-
-	/**
-	 * <pre>
-	 * trans:= "transpose" unary
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value trans(final ParserSource s) throws ParserException {
-		if (!litteral(s, "trans"))
-			return null;
-		return computeTrans(s, unary(s));
-	}
-
-	/**
-	 * @param ss
-	 * @param unary
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value computeDet(final ParserSource s, final Value unary)
-			throws ParserException {
-		return unary.apply(new ValueVisitor<Value>() {
-
-			@Override
-			public Value visit(final ArrayValue value) throws ParserException {
-				return new ScalarValue(value.getValue().det());
-			}
-
-			@Override
-			public Value visit(final ErrorValue value) throws ParserException {
-				throw value.getException();
-			}
-
-			@Override
-			public Value visit(final ScalarValue value) throws ParserException {
-				return value;
-			}
-		});
-	}
-
-	/**
-	 * @param <T>
-	 * @param s
-	 * @param a
-	 * @param b
-	 * @throws ParserException
-	 */
-	private final Value computeAugment(final ParserSource s, final Value a,
-			final Value b) throws ParserException {
-		try {
-			return a.apply(new ValueVisitor<Value>() {
-
-				@Override
-				public Value visit(final ArrayValue va) throws ParserException {
-					final RationalArray mx = va.getValue();
-					return b.apply(new ValueVisitor<Value>() {
-
-						@Override
-						public Value visit(final ArrayValue vb)
-								throws ParserException {
-							return new ArrayValue(mx.agumentRow(vb.getValue()));
-						}
-
-						@Override
-						public Value visit(final ErrorValue value)
-								throws ParserException {
-							throw value.getException();
-						}
-
-						@Override
-						public Value visit(final ScalarValue value)
-								throws ParserException {
-							return new ArrayValue(mx.agumentCol(value
-									.getValue()));
-						}
-					});
-				}
-
-				@Override
-				public Value visit(final ErrorValue value)
-						throws ParserException {
-					throw value.getException();
-				}
-
-				@Override
-				public Value visit(final ScalarValue va) throws ParserException {
-					if (!(b instanceof ScalarValue))
-						throw s.fail("scalar expected");
-					return new ArrayValue(va.getValue().augment(
-							((ScalarValue) b).getValue()));
-				}
-			});
-		} catch (final IllegalArgumentException e) {
-			throw s.fail(e, e.getMessage());
-		}
-	}
-
-	/**
-	 * @param <T>
-	 * @param s
-	 * @param a
-	 * @param b
-	 * @throws ParserException
-	 */
-	private final Value computeSliceCol(final ParserSource s, final Value a,
-			final Value b) throws ParserException {
-		try {
-			return a.apply(new ValueVisitor<Value>() {
-
-				@Override
-				public Value visit(final ArrayValue va) throws ParserException {
-					final RationalArray mx = va.getValue();
-					return b.apply(new ValueVisitor<Value>() {
-
-						@Override
-						public Value visit(final ArrayValue vb)
-								throws ParserException {
-							final RationalArray mb = vb.getValue();
-							if (mb.getColumnCount() != 2
-									|| mb.getRowCount() != 1)
-								throw s.fail("array 1 x 2 expected");
-							final RationalNumber ri0 = mb.getValues()[0][0];
-							if (!ri0.isInteger())
-								throw s.fail("%s is not an integer",
-										ri0.toString());
-							final RationalNumber ri1 = mb.getValues()[0][1];
-							if (!ri1.isInteger())
-								throw s.fail("%s is not an integer",
-										ri1.toString());
-							final int i = ri0.intValue();
-							final int j = ri1.intValue();
-							if (i > j)
-								throw s.fail("%d to %d invalid range", i, j);
-							if (i < 0 || i >= mx.getColumnCount())
-								throw s.fail("%i index out of range", i);
-							if (j < 0 || j >= mx.getColumnCount())
-								throw s.fail("%i index out of range", j);
-							return new ArrayValue(mx.sliceCol(i, j - i + 1));
-						}
-
-						@Override
-						public Value visit(final ErrorValue value)
-								throws ParserException {
-							throw value.getException();
-						}
-
-						@Override
-						public Value visit(final ScalarValue value)
-								throws ParserException {
-							final RationalNumber sb = value.getValue();
-							if (!sb.isInteger())
-								throw s.fail("%s is not an integer",
-										sb.toString());
-							final int i = sb.intValue();
-							if (i < 0 || i >= mx.getColumnCount())
-								throw s.fail("%d index out of range", i);
-							return new ArrayValue(mx.sliceCol(i, 1));
-						}
-					});
-				}
-
-				@Override
-				public Value visit(final ErrorValue value)
-						throws ParserException {
-					throw value.getException();
-				}
-
-				@Override
-				public Value visit(final ScalarValue va) throws ParserException {
-					throw s.fail("array expected");
-				}
-			});
-		} catch (final IllegalArgumentException e) {
-			throw s.fail(e, e.getMessage());
-		}
 	}
 }

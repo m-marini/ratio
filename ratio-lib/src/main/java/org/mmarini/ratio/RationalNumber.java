@@ -49,14 +49,6 @@ public class RationalNumber extends Number implements
 	 * 
 	 * @return
 	 */
-	public boolean isInteger() {
-		return lower == 1;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
 	public RationalNumber abs() {
 		return new RationalNumber(Math.abs(upper), lower);
 	}
@@ -91,6 +83,8 @@ public class RationalNumber extends Number implements
 	 * @return
 	 */
 	public RationalNumber div(final RationalNumber number) {
+		if (number.upper == 0)
+			throw new IllegalArgumentException("divide by 0");
 		return create(upper * number.lower, lower * number.upper);
 	}
 
@@ -167,8 +161,18 @@ public class RationalNumber extends Number implements
 	 * @return
 	 */
 	public RationalNumber inv() {
-		return upper >= 0 ? new RationalNumber(lower, upper)
+		if (upper == 0)
+			throw new IllegalArgumentException("divide by 0");
+		return upper > 0 ? new RationalNumber(lower, upper)
 				: new RationalNumber(-lower, -upper);
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isInteger() {
+		return lower == 1;
 	}
 
 	/**
