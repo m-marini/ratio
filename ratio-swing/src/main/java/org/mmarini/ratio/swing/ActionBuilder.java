@@ -40,29 +40,29 @@ public class ActionBuilder {
 	 */
 	private JMenu createMenu(final String id) {
 		final JMenu m = new JMenu(Messages.getString(String.format(
-				"ActionBuilder.%s.name", id)));
+				"ActionBuilder.%s.name", id))); //$NON-NLS-1$
 
 		final String ak = Messages.getString(String.format(
-				"ActionBuilder.%s.acceleratorKey", id));
-		if (!ak.startsWith("!"))
+				"ActionBuilder.%s.acceleratorKey", id)); //$NON-NLS-1$
+		if (!ak.startsWith("!")) //$NON-NLS-1$
 			m.setAccelerator(KeyStroke.getKeyStroke(ak));
 
 		final String mk = Messages.getString(String.format(
-				"ActionBuilder.%s.menmonicKey", id));
-		if (!mk.startsWith("!"))
+				"ActionBuilder.%s.menmonicKey", id)); //$NON-NLS-1$
+		if (!mk.startsWith("!")) //$NON-NLS-1$
 			m.setMnemonic(KeyEvent.getExtendedKeyCodeForChar(mk.charAt(0)));
 
 		final String si = Messages.getString(String.format(
-				"ActionBuilder.%s.smallIcon", id));
-		if (!si.startsWith("!")) {
+				"ActionBuilder.%s.smallIcon", id)); //$NON-NLS-1$
+		if (!si.startsWith("!")) { //$NON-NLS-1$
 			final URL url = getClass().getResource(si);
 			if (url != null)
 				m.setIcon(new ImageIcon(url));
 		}
 
 		final String sd = Messages.getString(String.format(
-				"ActionBuilder.%s.shortDescription", id));
-		if (!sd.startsWith("!"))
+				"ActionBuilder.%s.shortDescription", id)); //$NON-NLS-1$
+		if (!sd.startsWith("!")) //$NON-NLS-1$
 			m.setToolTipText(sd);
 		return m;
 	}
@@ -89,43 +89,43 @@ public class ActionBuilder {
 
 	public <A extends Action> A setUp(final A a, final String id) {
 		a.putValue(Action.NAME,
-				Messages.getString(String.format("ActionBuilder.%s.name", id)));
+				Messages.getString(String.format("ActionBuilder.%s.name", id))); //$NON-NLS-1$
 
 		final String ak = Messages.getString(String.format(
-				"ActionBuilder.%s.acceleratorKey", id));
-		if (!ak.startsWith("!"))
+				"ActionBuilder.%s.acceleratorKey", id)); //$NON-NLS-1$
+		if (!ak.startsWith("!")) //$NON-NLS-1$
 			a.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(ak));
 
 		final String mk = Messages.getString(String.format(
-				"ActionBuilder.%s.menmonicKey", id));
-		if (!mk.startsWith("!"))
+				"ActionBuilder.%s.menmonicKey", id)); //$NON-NLS-1$
+		if (!mk.startsWith("!")) //$NON-NLS-1$
 			a.putValue(Action.MNEMONIC_KEY,
 					KeyEvent.getExtendedKeyCodeForChar(mk.charAt(0)));
 
 		final String si = Messages.getString(String.format(
-				"ActionBuilder.%s.smallIcon", id));
-		if (!si.startsWith("!")) {
+				"ActionBuilder.%s.smallIcon", id)); //$NON-NLS-1$
+		if (!si.startsWith("!")) { //$NON-NLS-1$
 			final URL url = getClass().getResource(si);
 			if (url != null)
 				a.putValue(Action.SMALL_ICON, new ImageIcon(url));
 		}
 
 		final String li = Messages.getString(String.format(
-				"ActionBuilder.%s.largeIcon", id));
-		if (!li.startsWith("!")) {
+				"ActionBuilder.%s.largeIcon", id)); //$NON-NLS-1$
+		if (!li.startsWith("!")) { //$NON-NLS-1$
 			final URL url = getClass().getResource(li);
 			if (url != null)
 				a.putValue(Action.LARGE_ICON_KEY, new ImageIcon(url));
 		}
 
 		final String sd = Messages.getString(String.format(
-				"ActionBuilder.%s.shortDescription", id));
-		if (!sd.startsWith("!"))
+				"ActionBuilder.%s.shortDescription", id)); //$NON-NLS-1$
+		if (!sd.startsWith("!")) //$NON-NLS-1$
 			a.putValue(Action.SHORT_DESCRIPTION, sd);
 
 		final String ld = Messages.getString(String.format(
-				"ActionBuilder.%s.longDescription", id));
-		if (!ld.startsWith("!"))
+				"ActionBuilder.%s.longDescription", id)); //$NON-NLS-1$
+		if (!ld.startsWith("!")) //$NON-NLS-1$
 			a.putValue(Action.LONG_DESCRIPTION, ld);
 		return a;
 	}

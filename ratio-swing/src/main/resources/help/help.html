@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<style type="text/css">
+<!--
+body {
+	font-family: sans-serif;
+	font-size: 12px;
+}
+
+pre {
+	font-size: 12px;
+}
+
+.emph {
+	font-weight: bold;
+}
+-->
+</style>
+</head>
+<body>
+	<h1>Ratio ${pom.version}</h1>
+
+	<span class="emph">Ratio</span> is a calculator that handles rational
+	numbers and matrix algebra.
+
+	<h2>Syntax</h2>
+	<pre>
+&lt;expression> ::= &lt;compose>
+&lt;compose> ::= &lt;add> { "," &lt;add> | "row" &lt;add> | "col" &lt;add> } 
+&lt;add> ::= &lt;mul> { "+" &lt;mul> | "-" &lt;mul> }
+&lt;mul> ::= &lt;unary> { "*" &lt;unary> | "/" &lt;unary> }
+&lt;unary> * ::= &lt;plus> | &lt;negate> | &lt;identity> | &lt;determiner> | &lt;transpose> | &lt;inverse> | &lt;reduce> | &lt;trace> | &lt;term>
+&lt;plus> ::= "+" &lt;unary>
+&lt;negate> ::= "-" &lt;unary>
+&lt;identity> ::= "I" &lt;unary>
+&lt;determiner> ::= "det" &lt;unary> 
+&lt;transpose> ::= "trans" &lt;unary> 
+&lt;trace> ::= "trace" &lt;unary> 
+&lt;inverse> ::= "inv" &lt;unary> 
+&lt;reduce> ::= "reduce" &lt;unary>
+&lt;term> ::= &lt;integer> | &lt;identifier> | "(" &lt;compose> ")"
+	</pre>
+</body>
+</html>

@@ -6,12 +6,17 @@ package org.mmarini.ratio.swing;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +28,8 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -36,6 +43,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -86,6 +94,9 @@ public class Main {
 	private final JTextArea editingField;
 	private final JTextArea errorField;
 	private final JTextArea valueField;
+	private boolean saveEnabled;
+	private final AbstractAction helpAction;
+	private final JDialog helpDialog;
 
 	/**
 	 * 
@@ -100,6 +111,7 @@ public class Main {
 		editingField = new JTextArea();
 		errorField = new JTextArea();
 		valueField = new JTextArea();
+		helpDialog = new JDialog(frame);
 		final ActionBuilder ab = new ActionBuilder();
 
 		addExpAction = ab.setUp(new AbstractAction() {
@@ -109,7 +121,15 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				addExpression();
 			}
-		}, "addExpAction");
+		}, "addExpAction"); //$NON-NLS-1$
+		helpAction = ab.setUp(new AbstractAction() {
+			private static final long serialVersionUID = -5766508291490276836L;
+
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				help();
+			}
+		}, "helpAction"); //$NON-NLS-1$
 		deleteAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -6668398794253288377L;
 
@@ -117,7 +137,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				delete();
 			}
-		}, "deleteAction");
+		}, "deleteAction"); //$NON-NLS-1$
 		restoreAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 8383595489191445967L;
 
@@ -125,7 +145,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				selectExp();
 			}
-		}, "restoreAction");
+		}, "restoreAction"); //$NON-NLS-1$
 		applyAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 8383595489191445967L;
 
@@ -133,7 +153,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				apply();
 			}
-		}, "applyAction");
+		}, "applyAction"); //$NON-NLS-1$
 		newAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -5621162954617830047L;
 
@@ -143,7 +163,7 @@ public class Main {
 				saveAction.setEnabled(false);
 				process();
 			}
-		}, "newAction");
+		}, "newAction"); //$NON-NLS-1$
 		openAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 4818687628170975007L;
 
@@ -151,7 +171,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				open();
 			}
-		}, "openAction");
+		}, "openAction"); //$NON-NLS-1$
 		saveAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = 6076144582375870703L;
 
@@ -159,7 +179,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				save();
 			}
-		}, "saveAction");
+		}, "saveAction"); //$NON-NLS-1$
 		saveAsAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -7948173877913109561L;
 
@@ -167,7 +187,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				saveAs();
 			}
-		}, "saveAsAction");
+		}, "saveAsAction"); //$NON-NLS-1$
 		exitAction = ab.setUp(new AbstractAction() {
 			private static final long serialVersionUID = -5766508291490276836L;
 
@@ -175,7 +195,7 @@ public class Main {
 			public void actionPerformed(final ActionEvent e) {
 				frame.dispose();
 			}
-		}, "exitAction");
+		}, "exitAction"); //$NON-NLS-1$
 
 		expTable = new JTable(expTableModel);
 		expTable.setAutoCreateRowSorter(true);
@@ -214,11 +234,26 @@ public class Main {
 		c.setLayout(new BorderLayout());
 		c.add(createToolBar(), BorderLayout.NORTH);
 		c.add(createContent(), BorderLayout.CENTER);
+
 		saveAction.setEnabled(false);
 		deleteAction.setEnabled(false);
-		fileChooser.setFileFilter(new FileNameExtensionFilter(Messages
-				.getString("Main.filetype.text"), //$NON-NLS-1$
+		applyAction.setEnabled(false);
+		restoreAction.setEnabled(false);
+
+		fileChooser.setFileFilter(new FileNameExtensionFilter("", //$NON-NLS-1$
 				"xml")); //$NON-NLS-1$
+		try {
+			final URL url = getClass().getResource("/help/help.html"); //$NON-NLS-1$
+			final JEditorPane hp = new JEditorPane(url);
+			hp.setEditable(false);
+			helpDialog.setContentPane(new JScrollPane(hp));
+		} catch (final IOException e1) {
+			logger.error(e1.getMessage(), e1);
+		}
+		helpDialog.setSize(800, 600);
+		helpDialog.setLocation(20, 20);
+		helpDialog.setTitle(Messages.getString("Main.help.title")); //$NON-NLS-1$
+		helpDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
 	/**
@@ -247,6 +282,8 @@ public class Main {
 		defs.put(id, "0"); //$NON-NLS-1$
 		process();
 		select(id);
+		if (saveEnabled)
+			saveAction.setEnabled(true);
 	}
 
 	/**
@@ -270,6 +307,8 @@ public class Main {
 			defs.put(newId, exp);
 			process();
 			select(newId);
+			if (saveEnabled)
+				saveAction.setEnabled(true);
 		}
 	}
 
@@ -328,8 +367,7 @@ public class Main {
 		final GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(2, 2, 2, 2);
 
-		addComponent(p,
-				new JLabel(Messages.getString("Main.identifier.text")), gbc); //$NON-NLS-1$
+		addComponent(p, new JLabel(""), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -342,28 +380,19 @@ public class Main {
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.anchor = GridBagConstraints.CENTER;
-		addComponent(
-				p,
-				createEditorPane(editingField,
-						Messages.getString("Main.expression.text")), gbc); //$NON-NLS-1$
+		addComponent(p, createEditorPane(editingField, ""), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 0;
 		gbc.weighty = 0;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(
-				p,
-				createEditorPane(errorField,
-						Messages.getString("Main.error.text")), gbc); //$NON-NLS-1$
+		addComponent(p, createEditorPane(errorField, ""), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(
-				p,
-				createEditorPane(valueField,
-						Messages.getString("Main.value.text")), gbc); //$NON-NLS-1$
+		addComponent(p, createEditorPane(valueField, ""), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.weighty = 0;
@@ -406,9 +435,9 @@ public class Main {
 	 * @return
 	 */
 	private JMenuBar createMenuBar() {
-		return new ActionBuilder().createMenuBar("file", newAction, openAction,
-				null, saveAction, saveAsAction, null, exitAction, "edit",
-				addExpAction);
+		return new ActionBuilder().createMenuBar("file", newAction, openAction, //$NON-NLS-1$
+				null, saveAction, saveAsAction, null, exitAction, "edit", //$NON-NLS-1$
+				addExpAction, "help", helpAction); //$NON-NLS-1$
 	}
 
 	/**
@@ -429,6 +458,8 @@ public class Main {
 			final String id = expTable.getValueAt(row, 0).toString();
 			defs.remove(id);
 			process();
+			if (saveEnabled)
+				saveAction.setEnabled(true);
 		}
 	}
 
@@ -447,16 +478,32 @@ public class Main {
 	/**
 	 * 
 	 */
+	private void help() {
+		final Dimension ss = Toolkit.getDefaultToolkit().getScreenSize();
+		final Dimension fs = frame.getSize();
+		final Point fl = frame.getLocation();
+		final int hw = 400;
+		final int hx = Math.min(fl.x + fs.width, ss.width - hw);
+		helpDialog.setLocation(hx, fl.y);
+		helpDialog.setSize(hw, fs.height);
+		helpDialog.setVisible(true);
+	}
+
+	/**
+	 * 
+	 */
 	private void open() {
 		if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
 			final File f = fileChooser.getSelectedFile();
 			try {
 				defs = new DefsSerializer().load(f);
-				saveAction.setEnabled(true);
 				process();
+				saveEnabled = true;
 			} catch (final Exception e) {
+				saveEnabled = false;
 				showMessage(e);
 			}
+			saveAction.setEnabled(false);
 		}
 	}
 
@@ -493,10 +540,12 @@ public class Main {
 		final File f = fileChooser.getSelectedFile();
 		try {
 			new DefsSerializer().save(f, defs);
+			saveEnabled = true;
 		} catch (final Exception e) {
 			showMessage(e);
-			saveAction.setEnabled(false);
+			saveEnabled = false;
 		}
+		saveAction.setEnabled(false);
 	}
 
 	/**
@@ -506,13 +555,10 @@ public class Main {
 		if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
 			final File f = fileChooser.getSelectedFile();
 			if (!f.exists()
-					|| JOptionPane
-							.showConfirmDialog(
-									frame,
-									String.format(
-											Messages.getString("Main.ovverrideFile.text"), f), //$NON-NLS-1$
-									Messages.getString("Main.warinig.text"), JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
-									JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION)
+					|| JOptionPane.showConfirmDialog(frame,
+							String.format("", f), //$NON-NLS-1$
+							"", JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
+							JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
 				save();
 		}
 	}
@@ -543,6 +589,8 @@ public class Main {
 			editingField.setEnabled(true);
 			showValue(interpreter.getValues().get(id));
 			deleteAction.setEnabled(true);
+			applyAction.setEnabled(true);
+			restoreAction.setEnabled(true);
 		} else {
 			idField.setText(""); //$NON-NLS-1$
 			idField.setEnabled(false);
@@ -551,6 +599,8 @@ public class Main {
 			errorField.setText(""); //$NON-NLS-1$
 			valueField.setText(""); //$NON-NLS-1$
 			deleteAction.setEnabled(false);
+			applyAction.setEnabled(false);
+			restoreAction.setEnabled(false);
 		}
 	}
 
@@ -559,8 +609,7 @@ public class Main {
 	 */
 	private void showMessage(final Exception e) {
 		logger.error(e.getMessage(), e);
-		JOptionPane.showMessageDialog(frame, e.getMessage(),
-				Messages.getString("Main.error.title"), //$NON-NLS-1$
+		JOptionPane.showMessageDialog(frame, e.getMessage(), "", //$NON-NLS-1$
 				JOptionPane.ERROR_MESSAGE);
 	}
 
@@ -570,8 +619,7 @@ public class Main {
 	 */
 	private void showMessage(final String key, final Object... args) {
 		JOptionPane.showMessageDialog(frame,
-				String.format(Messages.getString(key), args),
-				Messages.getString("Main.message.title"), //$NON-NLS-1$
+				String.format(Messages.getString(key), args), "", //$NON-NLS-1$
 				JOptionPane.WARNING_MESSAGE);
 	}
 
