@@ -7,9 +7,29 @@ package org.mmarini.ratio;
 public class RationalNumber extends Number implements
 		Comparable<RationalNumber> {
 	private static final long serialVersionUID = 8377863324274024551L;
-	private static final Factorizer factorizer = new Factorizer();
 	public static final RationalNumber ZERO = new RationalNumber(0, 1);
 	public static final RationalNumber ONE = new RationalNumber(1, 1);
+
+	/**
+	 * Compute the greater common divisor between two number.
+	 * <p>
+	 * It implements the euclidean algorithm.
+	 * </p>
+	 * 
+	 * @param a1
+	 * @param b1
+	 * @return
+	 */
+	public static int computeGCD(final int a1, final int b1) {
+		int a = Math.abs(a1);
+		int b = Math.abs(b1);
+		while (b != 0) {
+			final int t = b;
+			b = a % b;
+			a = t;
+		}
+		return a;
+	}
 
 	/**
 	 * 
@@ -27,8 +47,8 @@ public class RationalNumber extends Number implements
 	public static RationalNumber create(final int upper, final int lower) {
 		final int l = upper == 0 ? 1 : lower >= 0 ? lower : -lower;
 		final int u = lower >= 0 ? upper : -upper;
-		final int mcd = factorizer.getMCD(u, l);
-		return mcd > 1 ? new RationalNumber(u / mcd, l / mcd)
+		final int gcd = computeGCD(u, l);
+		return gcd > 1 ? new RationalNumber(u / gcd, l / gcd)
 				: new RationalNumber(u, l);
 	}
 
@@ -66,8 +86,16 @@ public class RationalNumber extends Number implements
 	 * @param value
 	 * @return
 	 */
-	public RationalArray augment(final RationalNumber value) {
+	public RationalArray augmentCol(final RationalNumber value) {
 		return new RationalArray(new RationalNumber[][] { { this, value } });
+	}
+
+	/**
+	 * @param value
+	 * @return
+	 */
+	public RationalArray augmentRow(final RationalNumber value) {
+		return new RationalArray(new RationalNumber[][] { { this }, { value } });
 	}
 
 	/**

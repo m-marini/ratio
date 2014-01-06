@@ -105,9 +105,9 @@ public class InterpreterTest {
 	}
 
 	@Test
-	public void testErrorAugment3() {
+	public void testErrorAugmentRow3() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "(2,2),(1,2,3)");
+		map.put("a", "(2,2);(1,2,3)");
 		assertThat(
 				new Interpreter(map),
 				hasInterpreterValue(
@@ -116,12 +116,11 @@ public class InterpreterTest {
 	}
 
 	@Test
-	public void testErrorAugument() {
+	public void testErrorAugumentRow() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "1,?");
-		assertThat(
-				new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: <compose> ::=")));
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <add> ::=")));
 	}
 
 	@Test
@@ -159,7 +158,7 @@ public class InterpreterTest {
 	@Test
 	public void testErrorDivArrayBy0() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,4)) * inv ((1,2),(2,4))");
+		map.put("a", "(1,2;2,4) * inv (1,2;2,4)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", containsString("Error: divide by 0")));
 	}
@@ -225,7 +224,7 @@ public class InterpreterTest {
 	@Test
 	public void testErrorInvArrayBy0() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "inv ((1,2),(2,4))");
+		map.put("a", "inv (1,2;2,4)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", containsString("Error: divide by 0")));
 	}
@@ -255,15 +254,18 @@ public class InterpreterTest {
 		map.put("a", "?");
 		assertThat(
 				new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: <compose> ::=")));
+				hasInterpreterValue("a",
+						containsString("Error: <expression> ::=")));
 	}
 
 	@Test
 	public void testErrorParse2() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "1 a");
-		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: empty")));
+		assertThat(
+				new Interpreter(map),
+				hasInterpreterValue("a",
+						containsString("Error: <expression> ::=")));
 	}
 
 	@Test
@@ -272,7 +274,8 @@ public class InterpreterTest {
 		map.put("a", "1 col ?");
 		assertThat(
 				new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: <compose> ::=")));
+				hasInterpreterValue("a",
+						containsString("Error: <composeCol> ::=")));
 	}
 
 	@Test
@@ -401,7 +404,8 @@ public class InterpreterTest {
 		map.put("a", "1 row ?");
 		assertThat(
 				new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: <compose> ::=")));
+				hasInterpreterValue("a",
+						containsString("Error: <composeCol> ::=")));
 	}
 
 	@Test
@@ -589,11 +593,8 @@ public class InterpreterTest {
 	public void testErrorTerm1() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "( ^ )");
-		assertThat(
-				new Interpreter(map),
-				hasInterpreterValue(
-						"a",
-						containsString("<term> ::= <integer> | <identifier> | \"(\" <augment> \")\"")));
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("<slice> ::=")));
 	}
 
 	@Test
@@ -605,47 +606,9 @@ public class InterpreterTest {
 	}
 
 	@Test
-	public void testProcess1aug2() {
-		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "1,2");
-		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1, 2]"));
-	}
-
-	@Test
-	public void testProcess1aug2_3aug4() {
-		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "(1,2),(3,4)");
-		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", "[1, 2; 3, 4]"));
-	}
-
-	@Test
-	public void testProcess1aug2_3aug4_5aug6() {
-		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "(1,2),(3,4),(5,6)");
-		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", "[1, 2; 3, 4; 5, 6]"));
-	}
-
-	@Test
-	public void testProcess1aug2_3aug4_5aug6_7aug8() {
-		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(3,4)),((5,6),(7,8))");
-		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", "[1, 2; 3, 4; 5, 6; 7, 8]"));
-	}
-
-	@Test
-	public void testProcess1aug2aug3() {
-		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "1,2,3");
-		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1, 2, 3]"));
-	}
-
-	@Test
 	public void testProcess1diva1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "1 / ((1,2),(2,3))");
+		map.put("a", "1 / (1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[-3, 2; 2, -1]"));
 	}
@@ -681,7 +644,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessa1bya1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,3)) * ((1,2),(2,3))");
+		map.put("a", "(1,2;2,3)*(1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[5, 8; 8, 13]"));
 	}
@@ -689,7 +652,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessa1byinva1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,3)) * inv((1,2),(2,3))");
+		map.put("a", "(1,2;2,3) * inv((1,2;2,3))");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[1, 0; 0, 1]"));
 	}
@@ -697,7 +660,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessa1div2() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,3)) / 2");
+		map.put("a", "(1,2;2,3) / 2");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[1/2, 1; 1, 3/2]"));
 	}
@@ -705,7 +668,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessa1diva1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,3))/((1,2),(2,3))");
+		map.put("a", "(1,2;2,3)/(1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[1, 0; 0, 1]"));
 	}
@@ -713,7 +676,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessa1plusa1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,3)) + ((1,2),(2,3))");
+		map.put("a", "(1,2;2,3)+(1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[2, 4; 4, 6]"));
 	}
@@ -721,9 +684,77 @@ public class InterpreterTest {
 	@Test
 	public void testProcessa1suba1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2),(2,3))-((1,2),(2,3))");
+		map.put("a", "(1,2;2,3)-(1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[0, 0; 0, 0]"));
+	}
+
+	@Test
+	public void testProcessComposeArray2_2() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "1,2;3,4");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", "[1, 2; 3, 4]"));
+	}
+
+	@Test
+	public void testProcessComposeArray3_2() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "1,2;3,4;5,6");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", "[1, 2; 3, 4; 5, 6]"));
+	}
+
+	@Test
+	public void testProcessComposeArray4_2() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "(1,2;3,4);(5,6;7,8)");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", "[1, 2; 3, 4; 5, 6; 7, 8]"));
+	}
+
+	@Test
+	public void testProcessComposeCol1_1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "1;2");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1; 2]"));
+	}
+
+	@Test
+	public void testProcessComposeCol2_2() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "(1;2);(3;4)");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", "[1; 2; 3; 4]"));
+	}
+
+	@Test
+	public void testProcessComposeCol3() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "1;2;3");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1; 2; 3]"));
+	}
+
+	@Test
+	public void testProcessComposeRow1_1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "1,2");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1, 2]"));
+	}
+
+	@Test
+	public void testProcessComposeRow2_2() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "(1,2),(3,4)");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", "[1, 2, 3, 4]"));
+	}
+
+	@Test
+	public void testProcessComposeRow3() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "1,2,3");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1, 2, 3]"));
 	}
 
 	@Test
@@ -736,7 +767,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessDetArray() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "det((1,3),(2,4))");
+		map.put("a", "det((1,3;2,4))");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "-2"));
 	}
 
@@ -758,9 +789,23 @@ public class InterpreterTest {
 	@Test
 	public void testProcessInvArray() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "inv ((1,2),(2,3))");
+		map.put("a", "inv (1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[-3, 2; 2, -1]"));
+	}
+
+	@Test
+	public void testProcessLcm() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "lcm(1,1/2,1/3,1/10)");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "30"));
+	}
+
+	@Test
+	public void testProcessLcm1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "lcm(1,1/2;1/3,1/10)");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "30"));
 	}
 
 	@Test
@@ -773,7 +818,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessNegArray() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "-((1,2),(3,4))");
+		map.put("a", "-(1,2;3,4)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[-1, -2; -3, -4]"));
 	}
@@ -817,7 +862,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessReduce() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "reduce((1,2,3,1),(1,3,4,2),(3,2,1,3))");
+		map.put("a", "reduce(1,2,3,1;1,3,4,2;3,2,1,3)");
 		assertThat(
 				new Interpreter(map),
 				hasInterpreterValue("a",
@@ -827,14 +872,21 @@ public class InterpreterTest {
 	@Test
 	public void testProcessSliceCol() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2,3),(2,3,4),(3,4,5)) col 1");
+		map.put("a", "(1,2,3;2,3,4;3,4,5) col 1");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "[2; 3; 4]"));
+	}
+
+	@Test
+	public void testProcessSliceCol1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "((1,2) col 0)");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "[1]"));
 	}
 
 	@Test
 	public void testProcessSliceCols() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2,3),(2,3,4),(3,4,5)) col (1,2)");
+		map.put("a", "(1,2,3;2,3,4;3,4,5) col (1,2)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[2, 3; 3, 4; 4, 5]"));
 	}
@@ -842,14 +894,14 @@ public class InterpreterTest {
 	@Test
 	public void testProcessSliceRow() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2,3),(2,3,4),(3,4,5)) row 1");
+		map.put("a", "(1,2,3;2,3,4;3,4,5) row 1");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "[2, 3, 4]"));
 	}
 
 	@Test
 	public void testProcessSliceRows() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "((1,2,3),(2,3,4),(3,4,5)) row (1,2)");
+		map.put("a", "(1,2,3;2,3,4;3,4,5) row (1,2)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[2, 3, 4; 3, 4, 5]"));
 	}
@@ -857,14 +909,14 @@ public class InterpreterTest {
 	@Test
 	public void testProcessTrace() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "trace((1,2),(3,4))");
+		map.put("a", "trace(1,2;3,4)");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "5"));
 	}
 
 	@Test
 	public void testProcessTrace1() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "trace((1,2)col 0)");
+		map.put("a", "trace((1,2) col 0)");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "1"));
 	}
 
@@ -878,7 +930,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessTrace4() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "trace((1,2,3),(3,4,5))");
+		map.put("a", "trace(1,2,3;3,4,5)");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "5"));
 	}
 
@@ -892,7 +944,7 @@ public class InterpreterTest {
 	@Test
 	public void testProcessTransArray() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "trans ((1,2),(3,4))");
+		map.put("a", "trans ((1,2;3,4))");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[1, 3; 2, 4]"));
 	}

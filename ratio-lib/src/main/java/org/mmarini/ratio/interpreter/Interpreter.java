@@ -11,19 +11,22 @@ import org.mmarini.ratio.RationalNumber;
 
 /**
  * <pre>
- * parse ::= <compose>
- * compose := add { "," add | "row" add | "col" add}
+ * expression ::= slice
+ * slice := composeCol{ | "row" composeCol | "col" composeCol}
+ * composeCol := composeRow { ";" composeRow}
+ * composeRow := add { "," add}
  * add := mul { "+" mul | "-" mul }
  * mul := unary { "*" unary | "/" unary }
- * unary * := plus | negate | determiner | trans | inv | reduce | trace | term 
+ * unary * := plus | negate | determiner | trans | inv | reduce | trace | mcm | term 
  * reduce := "reduce" unary
  * plus := "+" unary 
  * negate := "-" unary 
  * determiner := "det" unary 
  * trans ::= "trans" unary 
  * trace ::= "trace" unary 
+ * lcm ::= "lcm" unary 
  * inv ::= "inv" unary 
- * term ::= integer | identifier | "(" agument ")"
+ * term ::= integer | identifier | "(" slice ")"
  * 
  * </pre>
  * 
@@ -77,14 +80,38 @@ public class Interpreter {
 
 	/**
 	 * <pre>
-	 * compose := add { "," add | "row" add | "col" add}
+	 * composeCol := composeRow { ";" composeRow}
 	 * </pre>
 	 * 
 	 * @param s
 	 * @return
 	 * @throws ParserException
 	 */
-	private Value compose(final ParserSource s) throws ParserException {
+	private Value composeCol(final ParserSource s) throws ParserException {
+		Value e = composeRow(s);
+		if (e == null)
+			return null;
+		for (;;) {
+			if (litteral(s, ";")) {
+				final Value a = composeRow(s);
+				if (a == null)
+					throw s.fail("<composeRow> ::= <add> { \",\" <add> }");
+				e = computeAugmentRow(s, e, a);
+			} else
+				return e;
+		}
+	}
+
+	/**
+	 * <pre>
+	 * composeRow := add { "," add}
+	 * </pre>
+	 * 
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value composeRow(final ParserSource s) throws ParserException {
 		Value e = add(s);
 		if (e == null)
 			return null;
@@ -92,21 +119,8 @@ public class Interpreter {
 			if (litteral(s, ",")) {
 				final Value a = add(s);
 				if (a == null)
-					throw s.fail("<compose> ::= <add> { ",
-							" <add> | \"row\" <add> | \"col\" <add> }");
-				e = computeAugment(s, e, a);
-			} else if (litteral(s, "row")) {
-				final Value a = add(s);
-				if (a == null)
-					throw s.fail("<compose> ::= <add> { ",
-							" <add> | \"row\" <add> | \"col\" <add> }");
-				e = computeSliceRow(s, e, a);
-			} else if (litteral(s, "col")) {
-				final Value a = add(s);
-				if (a == null)
-					throw s.fail("<compose> ::= <add> { ",
-							" <add> | \"row\" <add> | \"col\" <add> }");
-				e = computeSliceCol(s, e, a);
+					throw s.fail("<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }");
+				e = computeAugmentCol(s, e, a);
 			} else
 				return e;
 		}
@@ -192,7 +206,7 @@ public class Interpreter {
 	 * @param b
 	 * @throws ParserException
 	 */
-	private final Value computeAugment(final ParserSource s, final Value a,
+	private final Value computeAugmentCol(final ParserSource s, final Value a,
 			final Value b) throws ParserException {
 		try {
 			return a.apply(new ValueVisitor<Value>() {
@@ -205,7 +219,7 @@ public class Interpreter {
 						@Override
 						public Value visit(final ArrayValue vb)
 								throws ParserException {
-							return new ArrayValue(mx.agumentRow(vb.getValue()));
+							return new ArrayValue(mx.agumentCol(vb.getValue()));
 						}
 
 						@Override
@@ -233,7 +247,64 @@ public class Interpreter {
 				public Value visit(final ScalarValue va) throws ParserException {
 					if (!(b instanceof ScalarValue))
 						throw s.fail("scalar expected");
-					return new ArrayValue(va.getValue().augment(
+					return new ArrayValue(va.getValue().augmentCol(
+							((ScalarValue) b).getValue()));
+				}
+			});
+		} catch (final IllegalArgumentException e) {
+			throw s.fail(e, e.getMessage());
+		}
+	}
+
+	/**
+	 * @param <T>
+	 * @param s
+	 * @param a
+	 * @param b
+	 * @throws ParserException
+	 */
+	private final Value computeAugmentRow(final ParserSource s, final Value a,
+			final Value b) throws ParserException {
+		try {
+			return a.apply(new ValueVisitor<Value>() {
+
+				@Override
+				public Value visit(final ArrayValue va) throws ParserException {
+					final RationalArray mx = va.getValue();
+					return b.apply(new ValueVisitor<Value>() {
+
+						@Override
+						public Value visit(final ArrayValue vb)
+								throws ParserException {
+							return new ArrayValue(mx.augmentRow(vb.getValue()));
+						}
+
+						@Override
+						public Value visit(final ErrorValue value)
+								throws ParserException {
+							throw value.getException();
+						}
+
+						@Override
+						public Value visit(final ScalarValue value)
+								throws ParserException {
+							return new ArrayValue(mx.augmentRow(value
+									.getValue()));
+						}
+					});
+				}
+
+				@Override
+				public Value visit(final ErrorValue value)
+						throws ParserException {
+					throw value.getException();
+				}
+
+				@Override
+				public Value visit(final ScalarValue va) throws ParserException {
+					if (!(b instanceof ScalarValue))
+						throw s.fail("scalar expected");
+					return new ArrayValue(va.getValue().augmentRow(
 							((ScalarValue) b).getValue()));
 				}
 			});
@@ -407,6 +478,33 @@ public class Interpreter {
 		} catch (final IllegalArgumentException e) {
 			throw s.fail(e, e.getMessage());
 		}
+	}
+
+	/**
+	 * @param ss
+	 * @param v
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value computeMcm(final ParserSource s, final Value v)
+			throws ParserException {
+		return v.apply(new ValueVisitor<Value>() {
+
+			@Override
+			public Value visit(final ArrayValue value) throws ParserException {
+				return new ScalarValue(value.getValue().lcm());
+			}
+
+			@Override
+			public Value visit(final ErrorValue value) throws ParserException {
+				throw value.getException();
+			}
+
+			@Override
+			public Value visit(final ScalarValue value) throws ParserException {
+				return new ScalarValue(value.getValue().getLower());
+			}
+		});
 	}
 
 	/**
@@ -873,13 +971,31 @@ public class Interpreter {
 		values.put(id, Value.UNDEFINED);
 		Value v;
 		try {
-			v = parse(new StringSource(e));
+			v = expression(new StringSource(e));
 		} catch (final ParserException e1) {
 			values.put(id, new ErrorValue(e1));
 			return null;
 		}
 		values.put(id, v);
 		return v;
+	}
+
+	/**
+	 * <pre>
+	 * expression := slice
+	 * </pre>
+	 * 
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value expression(final ParserSource s) throws ParserException {
+		final Value e = slice(s);
+		if (e == null)
+			s.fail("<slice> ::= <composeCol> { | \"row\" <composeCol> | \"col\" <composeCol> }");
+		if (s.getToken() != null)
+			throw s.fail("<expression> ::= <slice>");
+		return e;
 	}
 
 	/**
@@ -927,6 +1043,17 @@ public class Interpreter {
 		if (!litteral(s, "inv"))
 			return null;
 		return computeInv(s, unary(s));
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value lcm(final ParserSource s) throws ParserException {
+		if (!litteral(s, "lcm"))
+			return null;
+		return computeMcm(s, unary(s));
 	}
 
 	/**
@@ -1009,24 +1136,6 @@ public class Interpreter {
 
 	/**
 	 * <pre>
-	 * parse := exp
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value parse(final ParserSource s) throws ParserException {
-		final Value e = compose(s);
-		if (e == null)
-			throw s.fail("<compose> ::= <add> { \",\" <add> }");
-		if (s.getToken() != null)
-			throw s.fail("empty");
-		return e;
-	}
-
-	/**
-	 * <pre>
 	 * plus := "+" unary
 	 * </pre>
 	 * 
@@ -1055,7 +1164,36 @@ public class Interpreter {
 
 	/**
 	 * <pre>
-	 * term := integer | identifier | "(" exp ")"
+	 * slice := composeCol{ | "row" composeCol | "col" composeCol}
+	 * </pre>
+	 * 
+	 * @param s
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value slice(final ParserSource s) throws ParserException {
+		Value e = composeCol(s);
+		if (e == null)
+			return null;
+		for (;;) {
+			if (litteral(s, "row")) {
+				final Value a = composeCol(s);
+				if (a == null)
+					throw s.fail("<composeCol> ::= <composeRow> { \";\" <composeRow> }");
+				e = computeSliceRow(s, e, a);
+			} else if (litteral(s, "col")) {
+				final Value a = composeCol(s);
+				if (a == null)
+					throw s.fail("<composeCol> ::= <composeRow> { \";\" <composeRow> }");
+				e = computeSliceCol(s, e, a);
+			} else
+				return e;
+		}
+	}
+
+	/**
+	 * <pre>
+	 * term := integer | identifier | "(" slice ")"
 	 * </pre>
 	 * 
 	 * @param s
@@ -1070,9 +1208,9 @@ public class Interpreter {
 		if (i != null)
 			return i;
 		if (litteral(s, "(")) {
-			final Value e = compose(s);
+			final Value e = slice(s);
 			if (e == null)
-				throw s.fail("<term> ::= <integer> | <identifier> | \"(\" <augment> \")\"");
+				throw s.fail("<slice> ::= <composeCol> { | \"row\" <composeCol> | \"col1\" <composeCol> }");
 			if (!litteral(s, ")"))
 				throw s.fail("\")\"");
 			return e;
@@ -1108,7 +1246,7 @@ public class Interpreter {
 
 	/**
 	 * <pre>
-	 * unary * := plus | negate | determiner | trans | inv | reduce | trace | identity |term
+	 * unary := plus | negate | determiner | trans | inv | reduce | trace  | mcm | identity |term
 	 * </pre>
 	 * 
 	 * @param s
@@ -1140,6 +1278,9 @@ public class Interpreter {
 		final Value o8 = trace(s);
 		if (o8 != null)
 			return o8;
+		final Value o9 = lcm(s);
+		if (o9 != null)
+			return o9;
 		return term(s);
 	}
 }

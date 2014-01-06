@@ -82,6 +82,26 @@ public class RationalNumberTest {
 	}
 
 	@Test
+	public final void testGetMCD_10_4() {
+		assertThat(RationalNumber.computeGCD(10, 4), equalTo(2));
+	}
+
+	@Test
+	public final void testGetMCD_10_9() {
+		assertThat(RationalNumber.computeGCD(10, 9), equalTo(1));
+	}
+
+	@Test
+	public final void testGetMCD_20_40() {
+		assertThat(RationalNumber.computeGCD(20, 40), equalTo(20));
+	}
+
+	@Test
+	public final void testGetMCD_60_100() {
+		assertThat(RationalNumber.computeGCD(60, 100), equalTo(20));
+	}
+
+	@Test
 	public final void testInverse() {
 		assertThat(r1_2.inv(), ratio(2, 1));
 		assertThat(r2_3.inv(), ratio(3, 2));

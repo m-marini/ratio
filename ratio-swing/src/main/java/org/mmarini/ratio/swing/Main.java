@@ -43,11 +43,17 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLFrameHyperlinkEvent;
 
 import org.mmarini.ratio.RationalNumber;
 import org.mmarini.ratio.interpreter.ArrayValue;
@@ -71,6 +77,12 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(final String[] args) {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException
+				| IllegalAccessException | UnsupportedLookAndFeelException e) {
+			logger.error(e.getMessage(), e);
+		}
 		new Main().run();
 	}
 
@@ -245,6 +257,27 @@ public class Main {
 		try {
 			final URL url = getClass().getResource("/help/help.html"); //$NON-NLS-1$
 			final JEditorPane hp = new JEditorPane(url);
+			hp.addHyperlinkListener(new HyperlinkListener() {
+
+				@Override
+				public void hyperlinkUpdate(final HyperlinkEvent e) {
+					if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+						final JEditorPane pane = (JEditorPane) e.getSource();
+						if (e instanceof HTMLFrameHyperlinkEvent) {
+							final HTMLFrameHyperlinkEvent evt = (HTMLFrameHyperlinkEvent) e;
+							final HTMLDocument doc = (HTMLDocument) pane
+									.getDocument();
+							doc.processHTMLFrameHyperlinkEvent(evt);
+						} else {
+							try {
+								pane.setPage(e.getURL());
+							} catch (final IOException e1) {
+								showMessage(e1);
+							}
+						}
+					}
+				}
+			});
 			hp.setEditable(false);
 			helpDialog.setContentPane(new JScrollPane(hp));
 		} catch (final IOException e1) {
@@ -367,7 +400,8 @@ public class Main {
 		final GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(2, 2, 2, 2);
 
-		addComponent(p, new JLabel(""), gbc); //$NON-NLS-1$
+		addComponent(p,
+				new JLabel(Messages.getString("Main.identifier.text")), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -380,19 +414,20 @@ public class Main {
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.anchor = GridBagConstraints.CENTER;
-		addComponent(p, createEditorPane(editingField, ""), gbc); //$NON-NLS-1$
+		addComponent(p,
+				createEditorPane(editingField, "Main.expression.text"), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 0;
 		gbc.weighty = 0;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(p, createEditorPane(errorField, ""), gbc); //$NON-NLS-1$
+		addComponent(p, createEditorPane(errorField, "Main.error.text"), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(p, createEditorPane(valueField, ""), gbc); //$NON-NLS-1$
+		addComponent(p, createEditorPane(valueField, "Main.value.text"), gbc); //$NON-NLS-1$
 
 		gbc.weightx = 1;
 		gbc.weighty = 0;
@@ -426,7 +461,7 @@ public class Main {
 			final String title) {
 		field.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
 		final JScrollPane sp = new JScrollPane(field);
-		sp.setBorder(BorderFactory.createTitledBorder(title));
+		sp.setBorder(BorderFactory.createTitledBorder(Messages.getString(title)));
 		return sp;
 	}
 

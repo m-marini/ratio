@@ -120,7 +120,7 @@ public class RationalArray {
 	 * @param o
 	 * @return
 	 */
-	public RationalArray agumentRow(final RationalArray o) {
+	public RationalArray augmentRow(final RationalArray o) {
 		final int n = values.length;
 		final int m = values[0].length;
 		final RationalNumber[][] vo = o.values;
@@ -134,6 +134,24 @@ public class RationalArray {
 		final RationalNumber[][] v = new RationalNumber[n + no][m];
 		System.arraycopy(values, 0, v, 0, n);
 		System.arraycopy(vo, 0, v, n, no);
+		return new RationalArray(v);
+	}
+
+	/**
+	 * @param value
+	 * @return
+	 */
+	public RationalArray augmentRow(final RationalNumber value) {
+		final int n = values.length;
+		final int m = values[0].length;
+		if (m != 1)
+			throw new IllegalArgumentException(
+					"Augment of different dimensions arrays " + n + "x" + m
+							+ " != 1");
+
+		final RationalNumber[][] v = new RationalNumber[n + 1][];
+		System.arraycopy(values, 0, v, 0, n);
+		v[n] = new RationalNumber[] { value };
 		return new RationalArray(v);
 	}
 
@@ -224,6 +242,20 @@ public class RationalArray {
 		if (!g.isTriangular())
 			throw new IllegalArgumentException("divide by 0");
 		return new RationalArray(g.getArray()).sliceCol(n, n);
+	}
+
+	/**
+	 * @return
+	 */
+	public RationalNumber lcm() {
+		int m = 1;
+		for (final RationalNumber[] r : values)
+			for (final RationalNumber v : r) {
+				final int l = v.getLower();
+				final int gcd = RationalNumber.computeGCD(m, l);
+				m = m * l / gcd;
+			}
+		return RationalNumber.create(m);
 	}
 
 	/**
