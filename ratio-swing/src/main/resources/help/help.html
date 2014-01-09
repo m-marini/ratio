@@ -30,12 +30,13 @@ td {
 .expr {
 	font-style: italic;
 	font-weight: bold;
-	color: #404040;
+	color: #408040;
 }
 
 .value {
 	font-family: monospace;
-	color: #404040;
+	font-weight: bold;
+	color: #404080;
 }
 -->
 </style>
@@ -65,6 +66,8 @@ td {
 			<li><a href="#Trans">Transpose</a></li>
 			<li><a href="#Reduce">Reduce</a></li>
 			<li><a href="#lcm">LCM</a></li>
+			<li><a href="#rank">Rank</a></li>
+			<li><a href="#bases">Bases</a></li>
 		</ul>
 		</li>
 		<li><a href="#Syntax">Syntax</a></li>
@@ -323,27 +326,54 @@ td {
 			class="value">30</span>
 	</p>
 
+	<a name="rank"></a>
+	<h3>Rank</h3>
+	<p>
+		You can compute the rank of an array using the function <span
+			class="expr">rank</span>.
+	</p>
+	<p>
+		Eg. <span class="expr">"rank(1,2,3;2,3,4;3,4,5)"</span> produces <span
+			class="value">2</span>
+	</p>
+
+	<a name="bases"></a>
+	<h3>Bases</h3>
+	<p>
+		You can compute extract the base vectors of a matrix using the
+		function <span class="expr">bases</span>.
+	</p>
+	<p>
+		Note than given a V=<span class="expr">(1,2,3;2,3,4;3,4,5)</span>
+		vector set (any column of matrix rappresents a vector), you can find
+		the bases and the rappresentatio of the vector set in the new bases as
+		follow:<br> Let E1 = <span class="expr">bases V</span> be the new
+		bases of V and n = <span class="expr">rank V</span> the rank of v. The
+		new vector set, in the E1 bases, is V1 = <span class="expr">reduce
+			V row (0,n-1)</span>.
+	</p>
+	<p>
+		Eg. <span class="expr">"bases(1,2,3;2,3,4;3,4,5)"</span> produces <span
+			class="value">[1, 2; 2, 3; 3, 4]</span>
+	</p>
+
 	<a name="Syntax"></a>
 	<h2>Syntax</h2>
 	<p>The syntax in BNF format is:</p>
 	<pre>
 &lt;expression&gt; ::= &lt;slice&gt;
-&lt;slice&gt; ::= &lt;composeCol&gt; {"row" &lt;composeCol&gt; | "col" &lt;composeCol&gt; } 
+&lt;slice&gt; ::= &lt;composeCol&gt; {&lt;slice-operator&gt; &lt;composeCol&gt; } 
+&lt;slice-operator&gt; ::= "row" | "col" 
 &lt;composeCol&gt; ::= &lt;composeRow&gt; { ";" &lt;composeRow&gt } 
 &lt;composeRow&gt; ::= &lt;add&gt; { "," &lt;add&gt; } 
-&lt;add&gt; ::= &lt;mul&gt; { "+" &lt;mul&gt; | "-" &lt;mul&gt; }
-&lt;mul&gt; ::= &lt;unary&gt; { "*" &lt;unary&gt; | "/" &lt;unary&gt; }
-&lt;unary&gt; * ::= &lt;plus&gt; | &lt;negate&gt; | &lt;identity&gt; | &lt;det&gt; | &lt;transpose&gt; | &lt;inverse&gt; | &lt;reduce&gt; | &lt;trace&gt; | &lt;lcm&gt; | &lt;term&gt;
-&lt;plus&gt; ::= "+" &lt;unary&gt;
-&lt;negate&gt; ::= "-" &lt;unary&gt;
-&lt;identity&gt; ::= "I" &lt;unary&gt;
-&lt;det&gt; ::= "det" &lt;unary&gt; 
-&lt;transpose&gt; ::= "trans" &lt;unary&gt; 
-&lt;trace&gt; ::= "trace" &lt;unary&gt; 
-&lt;inverse&gt; ::= "inv" &lt;unary&gt; 
-&lt;reduce&gt; ::= "reduce" &lt;unary&gt;
-&lt;lcm&gt; ::= "lcm" &lt;unary&gt;
+&lt;add&gt; ::= &lt;mul&gt; { &lt;add-operator&gt; &lt;mul&gt; }
+&lt;add-operator&gt; ::= "+" | "-" 
+&lt;mul&gt; ::= &lt;unary&gt; { &lt;mul-operator&gt; &lt;unary&gt; }
+&lt;mul-operator&gt; ::= "*" | "/"
+&lt;unary&gt; * ::= ]&lt;unary-operator&gt; <unary> | &lt;term&gt;
+&lt;unary-operator&gt; * ::= "+" | "-" | "I" | "det" | "trans" | "trace" | "inv" | "reduce" | "lcm" | "rank"  | "bases"
 &lt;term&gt; ::= &lt;integer&gt; | &lt;identifier&gt; | "(" &lt;slice&gt; ")"
+	
 	</pre>
 	<p>marco.marini@mmarini.org</p>
 </body>

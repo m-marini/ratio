@@ -115,7 +115,7 @@ public class Main {
 	 */
 	public Main() {
 
-		frame = new JFrame(""); //$NON-NLS-1$
+		frame = new JFrame(Messages.getString("Main.title")); //$NON-NLS-1$
 		defs = new HashMap<>();
 		expTableModel = new ExpressionTableModel();
 		fileChooser = new JFileChooser(new File(".")); //$NON-NLS-1$
@@ -252,7 +252,8 @@ public class Main {
 		applyAction.setEnabled(false);
 		restoreAction.setEnabled(false);
 
-		fileChooser.setFileFilter(new FileNameExtensionFilter("", //$NON-NLS-1$
+		fileChooser.setFileFilter(new FileNameExtensionFilter(Messages
+				.getString("Main.filetype.text"), //$NON-NLS-1$
 				"xml")); //$NON-NLS-1$
 		try {
 			final URL url = getClass().getResource("/help/help.html"); //$NON-NLS-1$
@@ -590,10 +591,13 @@ public class Main {
 		if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
 			final File f = fileChooser.getSelectedFile();
 			if (!f.exists()
-					|| JOptionPane.showConfirmDialog(frame,
-							String.format("", f), //$NON-NLS-1$
-							"", JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
-							JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
+					|| JOptionPane
+							.showConfirmDialog(
+									frame,
+									String.format(
+											Messages.getString("Main.ovverrideFile.text"), f), //$NON-NLS-1$
+									Messages.getString("Main.warinig.text"), JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
+									JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
 				save();
 		}
 	}
@@ -644,7 +648,8 @@ public class Main {
 	 */
 	private void showMessage(final Exception e) {
 		logger.error(e.getMessage(), e);
-		JOptionPane.showMessageDialog(frame, e.getMessage(), "", //$NON-NLS-1$
+		JOptionPane.showMessageDialog(frame, e.getMessage(),
+				Messages.getString("Main.error.title"), //$NON-NLS-1$
 				JOptionPane.ERROR_MESSAGE);
 	}
 
@@ -654,7 +659,8 @@ public class Main {
 	 */
 	private void showMessage(final String key, final Object... args) {
 		JOptionPane.showMessageDialog(frame,
-				String.format(Messages.getString(key), args), "", //$NON-NLS-1$
+				String.format(Messages.getString(key), args),
+				Messages.getString("Main.error.title"), //$NON-NLS-1$
 				JOptionPane.WARNING_MESSAGE);
 	}
 

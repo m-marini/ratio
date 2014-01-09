@@ -17,7 +17,7 @@ import org.mmarini.ratio.RationalNumber;
  * composeRow := add { "," add}
  * add := mul { "+" mul | "-" mul }
  * mul := unary { "*" unary | "/" unary }
- * unary * := plus | negate | determiner | trans | inv | reduce | trace | mcm | term 
+ * unary * := plus | negate | determiner | trans | inv | reduce | trace | lcm | term 
  * reduce := "reduce" unary
  * plus := "+" unary 
  * negate := "-" unary 
@@ -34,8 +34,21 @@ import org.mmarini.ratio.RationalNumber;
  * 
  */
 public class Interpreter {
+	private static final String EXPRESSION_FAILURE = "<expression> ::= <slice>";
+	private static final String COMPOSE_ROW_FAILURE = "<composeRow> ::= <add> { \",\" <add> }";
+	private static final String COMPOSE_COL_FAILURE = "<composeCol> ::= <composeRow> { \";\" <composeRow> }";
+	private static final String MUL_FAILURE = "<mul> ::= <unary> { \"*\" <unary> | \"/\" <unary> }";
+	private static final String ADD_FAILURE = "<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }";
+	private static final String CLOSE_BRACKET_FAILURE = "expected \")\"";
+	private static final String SLICE_FAILURE = "<slice> ::= <composeCol> { | \"row\" <composeCol> | \"col\" <composeCol> }";
+	private static final String UNARY_FAILURE = "<unary> ::= <unary-operator> <unary> | <term>";
+
 	private final Map<String, String> expressions;
 	private final Map<String, Value> values;
+	private final Map<String, Functor3<Value, ParserSource, Value, Value>> sliceOperMap;
+	private final Map<String, Functor3<Value, ParserSource, Value, Value>> addOperMap;
+	private final Map<String, Functor3<Value, ParserSource, Value, Value>> mulOperMap;
+	private final Map<String, Functor2<Value, ParserSource, Value>> unaryOperMap;
 
 	/**
 	 * @param expressions
@@ -44,6 +57,150 @@ public class Interpreter {
 	public Interpreter(final Map<String, String> expressions) {
 		this.expressions = expressions;
 		values = new HashMap<>();
+		unaryOperMap = new HashMap<>();
+		mulOperMap = new HashMap<>();
+		sliceOperMap = new HashMap<>();
+		addOperMap = new HashMap<>();
+
+		sliceOperMap.put("col",
+				new Functor3<Value, ParserSource, Value, Value>() {
+
+					@Override
+					public Value apply(final ParserSource p0, final Value p1,
+							final Value p2) throws ParserException {
+						return computeSliceCol(p0, p1, p2);
+					}
+				});
+		sliceOperMap.put("row",
+				new Functor3<Value, ParserSource, Value, Value>() {
+
+					@Override
+					public Value apply(final ParserSource p0, final Value p1,
+							final Value p2) throws ParserException {
+						return computeSliceRow(p0, p1, p2);
+					}
+				});
+
+		addOperMap.put("+", new Functor3<Value, ParserSource, Value, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1,
+					final Value p2) throws ParserException {
+				return computeAdd(p0, p1, p2);
+			}
+		});
+		addOperMap.put("-", new Functor3<Value, ParserSource, Value, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1,
+					final Value p2) throws ParserException {
+				return computeSub(p0, p1, p2);
+			}
+		});
+
+		mulOperMap.put("*", new Functor3<Value, ParserSource, Value, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1,
+					final Value p2) throws ParserException {
+				return computeMul(p0, p1, p2);
+			}
+		});
+		mulOperMap.put("/", new Functor3<Value, ParserSource, Value, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1,
+					final Value p2) throws ParserException {
+				return computeDiv(p0, p1, p2);
+			}
+		});
+
+		unaryOperMap.put("+", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1) {
+				return p1;
+			}
+		});
+		unaryOperMap.put("-", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeNeg(p0, p1);
+			}
+		});
+		unaryOperMap.put("trace", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeTrace(p0, p1);
+			}
+		});
+		unaryOperMap.put("trans", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeTrans(p0, p1);
+			}
+		});
+		unaryOperMap.put("det", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeDet(p0, p1);
+			}
+		});
+		unaryOperMap.put("I", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeIdentity(p0, p1);
+			}
+		});
+		unaryOperMap.put("inv", new Functor2<Value, ParserSource, Value>() {
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeInv(p0, p1);
+			}
+		});
+		unaryOperMap.put("lcm", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeLcm(p0, p1);
+			}
+		});
+		unaryOperMap.put("reduce", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeReduce(p0, p1);
+			}
+		});
+		unaryOperMap.put("bases", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeBases(p0, p1);
+			}
+		});
+		unaryOperMap.put("rank", new Functor2<Value, ParserSource, Value>() {
+
+			@Override
+			public Value apply(final ParserSource p0, final Value p1)
+					throws ParserException {
+				return computeRank(p0, p1);
+			}
+		});
 		for (final String id : expressions.keySet())
 			evaluate(id);
 	}
@@ -62,18 +219,14 @@ public class Interpreter {
 		if (e == null)
 			return null;
 		for (;;) {
-			if (litteral(s, "+")) {
-				final Value a = mul(s);
-				if (a == null)
-					throw s.fail("<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }");
-				e = computeAdd(s, e, a);
-			} else if (litteral(s, "-")) {
-				final Value a = mul(s);
-				if (a == null)
-					throw s.fail("<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }");
-				e = computeSub(s, e, a);
-			} else
+			final Functor3<Value, ParserSource, Value, Value> f = mapLitteral(
+					s, addOperMap);
+			if (f == null)
 				break;
+			final Value a = mul(s);
+			if (a == null)
+				throw s.fail(MUL_FAILURE);
+			e = f.apply(s, e, a);
 		}
 		return e;
 	}
@@ -95,7 +248,7 @@ public class Interpreter {
 			if (litteral(s, ";")) {
 				final Value a = composeRow(s);
 				if (a == null)
-					throw s.fail("<composeRow> ::= <add> { \",\" <add> }");
+					throw s.fail(COMPOSE_ROW_FAILURE);
 				e = computeAugmentRow(s, e, a);
 			} else
 				return e;
@@ -119,7 +272,7 @@ public class Interpreter {
 			if (litteral(s, ",")) {
 				final Value a = add(s);
 				if (a == null)
-					throw s.fail("<add> ::= <mul> { \"+\" <mul> | \"-\" <mul> }");
+					throw s.fail(ADD_FAILURE);
 				e = computeAugmentCol(s, e, a);
 			} else
 				return e;
@@ -315,6 +468,33 @@ public class Interpreter {
 
 	/**
 	 * @param ss
+	 * @param v
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value computeBases(final ParserSource s, final Value v)
+			throws ParserException {
+		return v.apply(new ValueVisitor<Value>() {
+
+			@Override
+			public Value visit(final ArrayValue value) throws ParserException {
+				return new ArrayValue(value.getValue().bases());
+			}
+
+			@Override
+			public Value visit(final ErrorValue value) throws ParserException {
+				throw value.getException();
+			}
+
+			@Override
+			public Value visit(final ScalarValue value) throws ParserException {
+				return value;
+			}
+		});
+	}
+
+	/**
+	 * @param ss
 	 * @param unary
 	 * @return
 	 * @throws ParserException
@@ -486,7 +666,7 @@ public class Interpreter {
 	 * @return
 	 * @throws ParserException
 	 */
-	private Value computeMcm(final ParserSource s, final Value v)
+	private Value computeLcm(final ParserSource s, final Value v)
 			throws ParserException {
 		return v.apply(new ValueVisitor<Value>() {
 
@@ -603,6 +783,33 @@ public class Interpreter {
 			@Override
 			public Value visit(final ScalarValue value) throws ParserException {
 				return new ScalarValue(value.getValue().neg());
+			}
+		});
+	}
+
+	/**
+	 * @param ss
+	 * @param v
+	 * @return
+	 * @throws ParserException
+	 */
+	private Value computeRank(final ParserSource s, final Value v)
+			throws ParserException {
+		return v.apply(new ValueVisitor<Value>() {
+
+			@Override
+			public Value visit(final ArrayValue value) throws ParserException {
+				return new ScalarValue(value.getValue().rank());
+			}
+
+			@Override
+			public Value visit(final ErrorValue value) throws ParserException {
+				throw value.getException();
+			}
+
+			@Override
+			public Value visit(final ScalarValue value) throws ParserException {
+				return new ScalarValue(RationalNumber.ONE);
 			}
 		});
 	}
@@ -922,21 +1129,6 @@ public class Interpreter {
 	}
 
 	/**
-	 * <pre>
-	 * determiner := "det" unary
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value det(final ParserSource s) throws ParserException {
-		if (!litteral(s, "det"))
-			return null;
-		return computeDet(s, unary(s));
-	}
-
-	/**
 	 * 
 	 * @param id
 	 * @return
@@ -992,9 +1184,9 @@ public class Interpreter {
 	private Value expression(final ParserSource s) throws ParserException {
 		final Value e = slice(s);
 		if (e == null)
-			s.fail("<slice> ::= <composeCol> { | \"row\" <composeCol> | \"col\" <composeCol> }");
+			s.fail(SLICE_FAILURE);
 		if (s.getToken() != null)
-			throw s.fail("<expression> ::= <slice>");
+			throw s.fail(EXPRESSION_FAILURE);
 		return e;
 	}
 
@@ -1020,43 +1212,6 @@ public class Interpreter {
 	}
 
 	/**
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value identity(final ParserSource s) throws ParserException {
-		if (!litteral(s, "I"))
-			return null;
-		return computeIdentity(s, unary(s));
-	}
-
-	/**
-	 * <pre>
-	 * inverse:= "inv" unary
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value inv(final ParserSource s) throws ParserException {
-		if (!litteral(s, "inv"))
-			return null;
-		return computeInv(s, unary(s));
-	}
-
-	/**
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value lcm(final ParserSource s) throws ParserException {
-		if (!litteral(s, "lcm"))
-			return null;
-		return computeMcm(s, unary(s));
-	}
-
-	/**
 	 * 
 	 * @param s
 	 * @param litteral
@@ -1067,6 +1222,19 @@ public class Interpreter {
 			return false;
 		s.consumeToken();
 		return true;
+	}
+
+	/**
+	 * 
+	 * @param s
+	 * @param map
+	 * @return
+	 */
+	private <F> F mapLitteral(final ParserSource s, final Map<String, F> map) {
+		final F f = map.get(s.getToken());
+		if (f != null)
+			s.consumeToken();
+		return f;
 	}
 
 	/**
@@ -1083,35 +1251,16 @@ public class Interpreter {
 		if (e == null)
 			return null;
 		for (;;) {
-			if (litteral(s, "*")) {
-				final Value a = unary(s);
-				if (a == null)
-					throw s.fail("<mul> ::= <unary> { \"*\" <unary> | \"/\" <unary> }");
-				e = computeMul(s, e, a);
-			} else if (litteral(s, "/")) {
-				final Value a = unary(s);
-				if (a == null)
-					throw s.fail("<mul> ::= <unary> { \"*\" <unary> | \"/\" <unary> }");
-				e = computeDiv(s, e, a);
-			} else
+			final Functor3<Value, ParserSource, Value, Value> f = mapLitteral(
+					s, mulOperMap);
+			if (f == null)
 				break;
+			final Value a = unary(s);
+			if (a == null)
+				throw s.fail(UNARY_FAILURE);
+			e = f.apply(s, e, a);
 		}
 		return e;
-	}
-
-	/**
-	 * <pre>
-	 * negate := "-" unary
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value neg(final ParserSource s) throws ParserException {
-		if (!litteral(s, "-"))
-			return null;
-		return computeNeg(s, unary(s));
 	}
 
 	/**
@@ -1136,34 +1285,6 @@ public class Interpreter {
 
 	/**
 	 * <pre>
-	 * plus := "+" unary
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value plus(final ParserSource s) throws ParserException {
-		return litteral(s, "+") ? unary(s) : null;
-	}
-
-	/**
-	 * <pre>
-	 * reduce := "reduce" unary
-	 * </pre>
-	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value reduce(final ParserSource s) throws ParserException {
-		if (!litteral(s, "reduce"))
-			return null;
-		return computeReduce(s, unary(s));
-	}
-
-	/**
-	 * <pre>
 	 * slice := composeCol{ | "row" composeCol | "col" composeCol}
 	 * </pre>
 	 * 
@@ -1176,19 +1297,16 @@ public class Interpreter {
 		if (e == null)
 			return null;
 		for (;;) {
-			if (litteral(s, "row")) {
-				final Value a = composeCol(s);
-				if (a == null)
-					throw s.fail("<composeCol> ::= <composeRow> { \";\" <composeRow> }");
-				e = computeSliceRow(s, e, a);
-			} else if (litteral(s, "col")) {
-				final Value a = composeCol(s);
-				if (a == null)
-					throw s.fail("<composeCol> ::= <composeRow> { \";\" <composeRow> }");
-				e = computeSliceCol(s, e, a);
-			} else
-				return e;
+			final Functor3<Value, ParserSource, Value, Value> f = mapLitteral(
+					s, sliceOperMap);
+			if (f == null)
+				break;
+			final Value a = composeCol(s);
+			if (a == null)
+				throw s.fail(COMPOSE_COL_FAILURE);
+			e = f.apply(s, e, a);
 		}
+		return e;
 	}
 
 	/**
@@ -1210,77 +1328,32 @@ public class Interpreter {
 		if (litteral(s, "(")) {
 			final Value e = slice(s);
 			if (e == null)
-				throw s.fail("<slice> ::= <composeCol> { | \"row\" <composeCol> | \"col1\" <composeCol> }");
+				throw s.fail(SLICE_FAILURE);
 			if (!litteral(s, ")"))
-				throw s.fail("\")\"");
+				throw s.fail(CLOSE_BRACKET_FAILURE);
 			return e;
 		} else
 			return null;
 	}
 
 	/**
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value trace(final ParserSource s) throws ParserException {
-		if (!litteral(s, "trace"))
-			return null;
-		return computeTrace(s, unary(s));
-	}
-
-	/**
 	 * <pre>
-	 * trans:= "transpose" unary
+	 * unary ::= unary-oper unary |term
 	 * </pre>
 	 * 
-	 * @param s
-	 * @return
-	 * @throws ParserException
-	 */
-	private Value trans(final ParserSource s) throws ParserException {
-		if (!litteral(s, "trans"))
-			return null;
-		return computeTrans(s, unary(s));
-	}
-
-	/**
-	 * <pre>
-	 * unary := plus | negate | determiner | trans | inv | reduce | trace  | mcm | identity |term
-	 * </pre>
-	 * 
-	 * @param s
+	 * @param t
 	 * @return
 	 * @throws ParserException
 	 */
 	private Value unary(final ParserSource s) throws ParserException {
-		final Value o1 = plus(s);
-		if (o1 != null)
-			return o1;
-		final Value o2 = neg(s);
-		if (o2 != null)
-			return o2;
-		final Value o3 = det(s);
-		if (o3 != null)
-			return o3;
-		final Value o4 = trans(s);
-		if (o4 != null)
-			return o4;
-		final Value o5 = inv(s);
-		if (o5 != null)
-			return o5;
-		final Value o6 = identity(s);
-		if (o6 != null)
-			return o6;
-		final Value o7 = reduce(s);
-		if (o7 != null)
-			return o7;
-		final Value o8 = trace(s);
-		if (o8 != null)
-			return o8;
-		final Value o9 = lcm(s);
-		if (o9 != null)
-			return o9;
-		return term(s);
+		final Functor2<Value, ParserSource, Value> f = mapLitteral(s,
+				unaryOperMap);
+		if (f != null) {
+			final Value e = unary(s);
+			if (e == null)
+				throw s.fail(UNARY_FAILURE);
+			return f.apply(s, e);
+		} else
+			return term(s);
 	}
 }

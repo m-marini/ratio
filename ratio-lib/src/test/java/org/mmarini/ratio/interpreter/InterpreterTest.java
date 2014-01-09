@@ -30,7 +30,7 @@ public class InterpreterTest {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "1+?");
 		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: <add> ::=")));
+				hasInterpreterValue("a", containsString("Error: <mul> ::=")));
 	}
 
 	@Test
@@ -124,6 +124,14 @@ public class InterpreterTest {
 	}
 
 	@Test
+	public void testErrorBases() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "bases )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
 	public void testErrorCyclic() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", " - a");
@@ -136,23 +144,17 @@ public class InterpreterTest {
 	@Test
 	public void testErrorDet() {
 		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "(1,2,3) * (1,2,3)");
-		assertThat(
-				new Interpreter(map),
-				hasInterpreterValue(
-						"a",
-						containsString("Error: Multiply of different dimensions")));
+		map.put("a", "det )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
 	}
 
 	@Test
 	public void testErrorDiv1() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "1/?");
-		assertThat(
-				new Interpreter(map),
-				hasInterpreterValue(
-						"a",
-						containsString("Error: <mul> ::= <unary> { \"*\" <unary> | \"/\" <unary> }")));
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::= ")));
 	}
 
 	@Test
@@ -202,6 +204,14 @@ public class InterpreterTest {
 	}
 
 	@Test
+	public void testErrorIdentity3() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "I )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
 	public void testErrorInv() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "inv((1,2,3),(1,2,3))");
@@ -209,6 +219,14 @@ public class InterpreterTest {
 				new Interpreter(map),
 				hasInterpreterValue("a",
 						containsString("Error: Inverse of not square array")));
+	}
+
+	@Test
+	public void testErrorInv1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "inv )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
 	}
 
 	@Test
@@ -238,14 +256,27 @@ public class InterpreterTest {
 	}
 
 	@Test
+	public void testErrorLcm() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "lcm )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
+	public void testErrorMinus() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "- )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
 	public void testErrorMul1() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "1*?");
-		assertThat(
-				new Interpreter(map),
-				hasInterpreterValue(
-						"a",
-						containsString("Error: <mul> ::= <unary> { \"*\" <unary> | \"/\" <unary> }")));
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
 	}
 
 	@Test
@@ -265,7 +296,31 @@ public class InterpreterTest {
 		assertThat(
 				new Interpreter(map),
 				hasInterpreterValue("a",
-						containsString("Error: <expression> ::=")));
+						containsString("Error: <expression> ::= ")));
+	}
+
+	@Test
+	public void testErrorPlus() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "+ )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
+	public void testErrorRank() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "rank )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
+	public void testErrorReduce() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "reduce )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
 	}
 
 	@Test
@@ -275,7 +330,7 @@ public class InterpreterTest {
 		assertThat(
 				new Interpreter(map),
 				hasInterpreterValue("a",
-						containsString("Error: <composeCol> ::=")));
+						containsString("Error: <composeCol> ::= ")));
 	}
 
 	@Test
@@ -405,7 +460,7 @@ public class InterpreterTest {
 		assertThat(
 				new Interpreter(map),
 				hasInterpreterValue("a",
-						containsString("Error: <composeCol> ::=")));
+						containsString("Error: <composeCol> ::= ")));
 	}
 
 	@Test
@@ -533,7 +588,7 @@ public class InterpreterTest {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "1-?");
 		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: <add> ::=")));
+				hasInterpreterValue("a", containsString("Error: <mul> ::=")));
 	}
 
 	@Test
@@ -601,8 +656,26 @@ public class InterpreterTest {
 	public void testErrorTerm2() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "( 1 a");
+		assertThat(
+				new Interpreter(map),
+				hasInterpreterValue("a",
+						containsString("Error: expected \")\"")));
+	}
+
+	@Test
+	public void testErrorTrace() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "trace )");
 		assertThat(new Interpreter(map),
-				hasInterpreterValue("a", containsString("Error: \")\"")));
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
+	}
+
+	@Test
+	public void testErrorTrans() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "trans )");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("Error: <unary> ::=")));
 	}
 
 	@Test
@@ -687,6 +760,22 @@ public class InterpreterTest {
 		map.put("a", "(1,2;2,3)-(1,2;2,3)");
 		assertThat(new Interpreter(map),
 				hasInterpreterValue("a", "[0, 0; 0, 0]"));
+	}
+
+	@Test
+	public void testProcessAddv1v1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "(1,2)+(1,2)");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "[2, 4]"));
+	}
+
+	@Test
+	public void testProcessBase() {
+		// TODO
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "bases(1,2,3;2,3,4;3,4,5)");
+		assertThat(new Interpreter(map),
+				hasInterpreterValue("a", containsString("[1, 2; 2, 3; 3, 4]")));
 	}
 
 	@Test
@@ -860,6 +949,20 @@ public class InterpreterTest {
 	}
 
 	@Test
+	public void testProcessRank() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "rank 5");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "1"));
+	}
+
+	@Test
+	public void testProcessRank1() {
+		final HashMap<String, String> map = new HashMap<>();
+		map.put("a", "rank(1,2,3;2,3,4;3,4,5)");
+		assertThat(new Interpreter(map), hasInterpreterValue("a", "2"));
+	}
+
+	@Test
 	public void testProcessReduce() {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "reduce(1,2,3,1;1,3,4,2;3,2,1,3)");
@@ -961,13 +1064,6 @@ public class InterpreterTest {
 		final HashMap<String, String> map = new HashMap<>();
 		map.put("a", "(1,2) * trans(2,3)");
 		assertThat(new Interpreter(map), hasInterpreterValue("a", "[8]"));
-	}
-
-	@Test
-	public void testProcessv1plusv1() {
-		final HashMap<String, String> map = new HashMap<>();
-		map.put("a", "(1,2)+(1,2)");
-		assertThat(new Interpreter(map), hasInterpreterValue("a", "[2, 4]"));
 	}
 
 	@Test

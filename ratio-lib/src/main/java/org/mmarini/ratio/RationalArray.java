@@ -156,6 +156,24 @@ public class RationalArray {
 	}
 
 	/**
+	 * @return
+	 */
+	public RationalArray bases() {
+		final RationalArray r = reduce();
+		final RationalNumber[][] v = r.values;
+		final int n = v[0].length;
+		final int m = v[0].length;
+		int k = 1;
+		RationalArray b = sliceCol(0, 1);
+		for (int i = 1; i < m && k < n; ++i)
+			if (!RationalNumber.ZERO.equals(v[k][i])) {
+				b = b.agumentCol(sliceCol(i, 1));
+				++k;
+			}
+		return b;
+	}
+
+	/**
 	 * 
 	 * @param v
 	 * @return
