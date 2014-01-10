@@ -11,7 +11,9 @@
 		<welcome-file>default.html</welcome-file>
 		<welcome-file>default.htm</welcome-file>
 		<welcome-file>default.jsp</welcome-file>
-	</welcome-file-list>
+		<welcome-file>ratio.html</welcome-file>
+			</welcome-file-list>
+	<!-- 
 	<servlet>
 		<description></description>
 		<display-name>RatioServlet</display-name>
@@ -22,4 +24,5 @@
 		<servlet-name>RatioServlet</servlet-name>
 		<url-pattern>/ratio/*</url-pattern>
 	</servlet-mapping>
+	 -->
 </web-app>
