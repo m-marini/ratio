@@ -11,7 +11,7 @@ body {
 }
 
 pre {
-	font-size: 10px;
+	font-size: 1em;
 }
 
 table {
@@ -58,6 +58,7 @@ td {
 		<li><a href="#Expressions">Expressions</a></li>
 		<ul>
 			<li><a href="#Composition">Composition</a></li>
+			<li><a href="#Slicing">Slicing</a></li>
 			<li><a href="#Oper">Operators</a></li>
 			<li><a href="#Identity">Identity</a></li>
 			<li><a href="#Det">Determinant</a></li>
@@ -68,6 +69,7 @@ td {
 			<li><a href="#lcm">LCM</a></li>
 			<li><a href="#rank">Rank</a></li>
 			<li><a href="#bases">Bases</a></li>
+			<li><a href="#Priorities">Operator Priorities</a></li>
 		</ul>
 		</li>
 		<li><a href="#Syntax">Syntax</a></li>
@@ -208,30 +210,84 @@ td {
 
 	<p>Combining the two operators you can produce array af any size.</p>
 	<p>
-		Eg: <span class="expr">"1,2,3;2,3,4;3,6,5"</span> produces an array of
+		Eg: <span class="expr">"1,2,3;4,5,6;7,8,9"</span> produces an array of
 		3 rows by 3 columns
+	</p>
 	<table>
 		<tr>
 			<td>1</td>
 			<td>2</td>
-			<td>4</td>
+			<td>3</td>
 		</tr>
+		<tr>
+			<td>4</td>
+			<td>5</td>
+			<td>6</td>
+		</tr>
+		<tr>
+			<td>7</td>
+			<td>8</td>
+			<td>9</td>
+		</tr>
+	</table>
+
+	<a name="Slicing"></a>
+	<h3>Slicing</h3>
+	<p>
+		The slicing operators <span class="expr">"row"</span> and <span
+			class="expr">"col"</span> can be used to create an array from another
+		one extracting part of it.
+	</p>
+	<p>
+		You can extract a contiguous set of rows with <span class="expr">"row"</span>
+		followed by the first and last inclusive row index. Note that the
+		indexes are zero based, so the first row has index 0.
+	</p>
+	<p>
+		Eg: <span class="expr">"1,2,3;4,5,6;7,8,9 row 1,2"</span> produces an
+		array of 2 rows by 3 columns
+	</p>
+	<table>
+		<tr>
+			<td>4</td>
+			<td>5</td>
+			<td>6</td>
+		</tr>
+		<tr>
+			<td>7</td>
+			<td>8</td>
+			<td>9</td>
+		</tr>
+	</table>
+	<p>
+		You can extract a contiguous set of columns with <span class="expr">"col"</span>
+		followed by the first and last column index. Note that the indexes are
+		zero based, so the first column index has 0.
+	</p>
+	<p>
+		Eg: <span class="expr">"1,2,3;4,5,6;7,8,9 col 1,2"</span> produces an
+		array of 3 rows by 2 columns
+	</p>
+	<table>
 		<tr>
 			<td>2</td>
 			<td>3</td>
-			<td>4</td>
 		</tr>
 		<tr>
-			<td>3</td>
-			<td>6</td>
 			<td>5</td>
+			<td>6</td>
+		</tr>
+		<tr>
+			<td>8</td>
+			<td>9</td>
 		</tr>
 	</table>
-	</p>
+	<p>The composition operators has higher priority than slicing
+		operators.</p>
 
 	<a name="Oper"></a>
 	<h3>Operators</h3>
-	<p>The basic binary algebrical operator are supported:</p>
+	<p>The basic binary algebraic operators are supported:</p>
 	<ul>
 		<li><span class="expr">"+"</span> computes the sum of the terms</li>
 		<li><span class="expr">"-"</span> computes the difference of the
@@ -357,23 +413,59 @@ td {
 			class="value">[1, 2; 2, 3; 3, 4]</span>
 	</p>
 
+	<a name="Priorities"></a>
+	<h3>Operator Priorities</h3>
+	<p>The operator priorities from higher to lower are:</p>
+	<ol>
+		<li>Bracket operators <span class="expr">"(" ... ")"</span></li>
+		<li>Unary oparators <span class="expr">"+", "-", "I",
+				"det", "trans", "trace", "inv", "reduce", "lcm", "rank", "bases"</span></li>
+		<li>Multiplier operators <span class="expr">"*", "/"</span></li>
+		<li>Adder operators <span class="expr">"+", "-"</span></li>
+		<li>Row composition operator <span class="expr">","</span></li>
+		<li>Column composition operator <span class="expr">";"</span></li>
+		<li>Slicing operators <span class="expr">"row", "col"</span></li>
+	</ol>
+
+
 	<a name="Syntax"></a>
 	<h2>Syntax</h2>
 	<p>The syntax in BNF format is:</p>
 	<pre>
 &lt;expression&gt; ::= &lt;slice&gt;
-&lt;slice&gt; ::= &lt;composeCol&gt; {&lt;slice-operator&gt; &lt;composeCol&gt; } 
+
+&lt;slice&gt; ::= &lt;composeCol&gt; { &lt;slice-operator&gt; &lt;composeCol&gt; }
+ 
 &lt;slice-operator&gt; ::= "row" | "col" 
-&lt;composeCol&gt; ::= &lt;composeRow&gt; { ";" &lt;composeRow&gt } 
+
+&lt;composeCol&gt; ::= &lt;composeRow&gt; { ";" &lt;composeRow&gt; } 
+
 &lt;composeRow&gt; ::= &lt;add&gt; { "," &lt;add&gt; } 
+
 &lt;add&gt; ::= &lt;mul&gt; { &lt;add-operator&gt; &lt;mul&gt; }
+
 &lt;add-operator&gt; ::= "+" | "-" 
+
 &lt;mul&gt; ::= &lt;unary&gt; { &lt;mul-operator&gt; &lt;unary&gt; }
+
 &lt;mul-operator&gt; ::= "*" | "/"
-&lt;unary&gt; * ::= ]&lt;unary-operator&gt; <unary> | &lt;term&gt;
-&lt;unary-operator&gt; * ::= "+" | "-" | "I" | "det" | "trans" | "trace" | "inv" | "reduce" | "lcm" | "rank"  | "bases"
+
+&lt;unary&gt; * ::= &lt;unary-operator&gt; &lt;unary&gt; | &lt;term&gt;
+
+&lt;unary-operator&gt; * ::=
+	"+"
+	| "-"
+	| "I"
+	| "det"
+	| "trans"
+	| "trace"
+	| "inv"
+	| "reduce"
+	| "lcm"
+	| "rank"
+	| "bases"
+
 &lt;term&gt; ::= &lt;integer&gt; | &lt;identifier&gt; | "(" &lt;slice&gt; ")"
-	
 	</pre>
 	<p>marco.marini@mmarini.org</p>
 </body>

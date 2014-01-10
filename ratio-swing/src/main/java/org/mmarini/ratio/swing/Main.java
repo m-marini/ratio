@@ -15,12 +15,15 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 
 import javax.swing.AbstractAction;
@@ -46,6 +49,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
@@ -78,13 +83,62 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(final String[] args) {
+		installLookAndFeel();
+		new Main().run();
+	}
+
+	/**
+	 * 
+	 */
+	private static void installLookAndFeel() {
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			final Properties p = loadProperties();
+			final String c = p.getProperty("lookAndFeelClass",
+					UIManager.getSystemLookAndFeelClassName());
+			UIManager.setLookAndFeel(c);
+			logger.debug("Set Look&Feel to {}", c);
 		} catch (ClassNotFoundException | InstantiationException
 				| IllegalAccessException | UnsupportedLookAndFeelException e) {
 			logger.error(e.getMessage(), e);
 		}
-		new Main().run();
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private static Properties loadProperties() {
+		final Properties p = new Properties();
+		try {
+			final FileInputStream in = new FileInputStream(getOptionsFile());
+			p.loadFromXML(in);
+			in.close();
+		} catch (final IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return p;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private static void saveProperties(final Properties p) {
+		try {
+			final FileOutputStream out = new FileOutputStream(getOptionsFile());
+			p.storeToXML(out, null, "UTF8");
+			out.close();
+		} catch (final IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private static File getOptionsFile() {
+		return new File(System.getProperty("user.home"), ".ratio.xml");
 	}
 
 	private final JFrame frame;
@@ -105,7 +159,6 @@ public class Main {
 	private final JTable expTable;
 	private final JTextField idField;
 	private final JTextArea editingField;
-	private final JTextArea errorField;
 	private final JTextArea valueField;
 	private boolean saveEnabled;
 	private final AbstractAction helpAction;
@@ -122,7 +175,6 @@ public class Main {
 		fileChooser = new JFileChooser(new File(".")); //$NON-NLS-1$
 		idField = new JTextField(10);
 		editingField = new JTextArea();
-		errorField = new JTextArea();
 		valueField = new JTextArea();
 		helpDialog = new JDialog(frame);
 		final ActionBuilder ab = new ActionBuilder();
@@ -236,10 +288,6 @@ public class Main {
 		editingField.setRows(5);
 		editingField.invalidate();
 		editingField.setEnabled(false);
-
-		errorField.setRows(3);
-		errorField.invalidate();
-		errorField.setEditable(false);
 
 		valueField.setEditable(false);
 
@@ -419,12 +467,6 @@ public class Main {
 		addComponent(p,
 				createEditorPane(editingField, "Main.expression.text"), gbc); //$NON-NLS-1$
 
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbc.fill = GridBagConstraints.BOTH;
-		addComponent(p, createEditorPane(errorField, "Main.error.text"), gbc); //$NON-NLS-1$
-
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -472,9 +514,18 @@ public class Main {
 	 * @return
 	 */
 	private JMenuBar createMenuBar() {
-		return new ActionBuilder().createMenuBar("file", newAction, openAction, //$NON-NLS-1$
+		return new ActionBuilder(new ChangeListener() {
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				final Properties p = loadProperties();
+				p.setProperty("lookAndFeelClass", UIManager.getLookAndFeel()
+						.getClass().getName());
+				saveProperties(p);
+			}
+		}, frame, fileChooser).createMenuBar("file", newAction, openAction, //$NON-NLS-1$
 				null, saveAction, saveAsAction, null, exitAction, "edit", //$NON-NLS-1$
-				addExpAction, "help", helpAction); //$NON-NLS-1$
+				addExpAction, "options", "lookAndFeel", "help", helpAction); //$NON-NLS-1$
 	}
 
 	/**
@@ -636,7 +687,6 @@ public class Main {
 			idField.setEnabled(false);
 			editingField.setText(""); //$NON-NLS-1$
 			editingField.setEnabled(false);
-			errorField.setText(""); //$NON-NLS-1$
 			valueField.setText(""); //$NON-NLS-1$
 			deleteAction.setEnabled(false);
 			applyAction.setEnabled(false);
@@ -670,23 +720,6 @@ public class Main {
 	 */
 	private void showValue(final Value value) {
 		try {
-			errorField.setText(value.apply(new ValueVisitor<String>() {
-
-				@Override
-				public String visit(final ArrayValue value) {
-					return ""; //$NON-NLS-1$
-				}
-
-				@Override
-				public String visit(final ErrorValue value) {
-					return value.getException().getDescription();
-				}
-
-				@Override
-				public String visit(final ScalarValue value) {
-					return ""; //$NON-NLS-1$
-				}
-			}));
 			valueField.setText(value.apply(new ValueVisitor<String>() {
 
 				@Override
@@ -696,7 +729,7 @@ public class Main {
 
 				@Override
 				public String visit(final ErrorValue value) {
-					return value.toString();
+					return value.getException().getDescription();
 				}
 
 				@Override

@@ -3,23 +3,42 @@
  */
 package org.mmarini.ratio.swing;
 
+import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.net.URL;
 
 import javax.swing.Action;
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
 import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author US00852
  * 
  */
 public class ActionBuilder {
+	private static final Logger logger = LoggerFactory
+			.getLogger(ActionBuilder.class);
+	private final ChangeListener lookAndFeelListener;
+
+	private final Component[] comps;
+
 	/**
 	 * 
 	 * @return
@@ -32,6 +51,22 @@ public class ActionBuilder {
 			else
 				tb.add(new JSeparator(SwingConstants.VERTICAL));
 		return tb;
+	}
+
+	/**
+	 * @param lookAndFeelListener
+	 */
+	public ActionBuilder(final ChangeListener lookAndFeelListener,
+			final Component... comps) {
+		this.comps = comps;
+		this.lookAndFeelListener = lookAndFeelListener;
+	}
+
+	/**
+	 * 
+	 */
+	public ActionBuilder() {
+		this(null);
 	}
 
 	/**
@@ -77,14 +112,65 @@ public class ActionBuilder {
 		for (final Object d : defs) {
 			if (d == null)
 				m.add(new JSeparator());
+			else if (d instanceof Action)
+				m.add((Action) d);
+			else if ("lookAndFeel".equals(d))
+				m.add(createLFMenu());
 			else if (d instanceof String) {
 				m = createMenu(d.toString());
 				mb.add(m);
-			} else if (d instanceof Action)
-				m.add((Action) d);
-
+			}
 		}
 		return mb;
+	}
+
+	/**
+	 * @return
+	 */
+	private JMenu createLFMenu() {
+		final JMenu mi = createMenu("lookAndFeel");
+		final ButtonGroup g = new ButtonGroup();
+		final ChangeListener l = new ChangeListener() {
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				final ButtonModel s = (ButtonModel) e.getSource();
+				final String lf = UIManager.getLookAndFeel().getClass()
+						.getName();
+				final String c = s.getActionCommand();
+				if (s.isSelected() && !lf.equals(c)) {
+					try {
+						UIManager.setLookAndFeel(c);
+						for (final Component c1 : comps)
+							SwingUtilities.updateComponentTreeUI(c1);
+						logger.debug("Set look&feel to {}", c);
+						if (lookAndFeelListener != null)
+							lookAndFeelListener.stateChanged(e);
+					} catch (ClassNotFoundException | InstantiationException
+							| IllegalAccessException
+							| UnsupportedLookAndFeelException e1) {
+						logger.error(e1.getMessage(), e);
+					}
+				}
+			}
+		};
+		final String scn = UIManager.getLookAndFeel().getClass().getName();
+		ButtonModel sm = null;
+		for (final LookAndFeelInfo lf : UIManager.getInstalledLookAndFeels()) {
+			final JRadioButtonMenuItem mlf = new JRadioButtonMenuItem(
+					lf.getName());
+
+			final ButtonModel m = mlf.getModel();
+			final String cn = lf.getClassName();
+			m.setActionCommand(cn);
+			m.addChangeListener(l);
+			if (cn == scn)
+				sm = m;
+			mi.add(mlf);
+			g.add(mlf);
+		}
+		g.setSelected(sm, true);
+		return mi;
 	}
 
 	public <A extends Action> A setUp(final A a, final String id) {
