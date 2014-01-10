@@ -57,6 +57,7 @@ import javax.swing.text.html.HTMLFrameHyperlinkEvent;
 
 import org.mmarini.ratio.RationalNumber;
 import org.mmarini.ratio.interpreter.ArrayValue;
+import org.mmarini.ratio.interpreter.DefsSerializer;
 import org.mmarini.ratio.interpreter.ErrorValue;
 import org.mmarini.ratio.interpreter.Interpreter;
 import org.mmarini.ratio.interpreter.ParserException;
