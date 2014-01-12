@@ -32,7 +32,7 @@ import com.google.gson.Gson;
 /**
  * Servlet implementation class RatioServlet
  */
-@WebServlet(name = "RatioServlet", urlPatterns = { "/ratio" })
+@WebServlet(name = "RatioServlet", urlPatterns = { "/ratio/*" })
 @MultipartConfig
 public class RatioServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -46,6 +46,63 @@ public class RatioServlet extends HttpServlet {
 	 */
 	public RatioServlet() {
 		gson = new Gson();
+	}
+
+	/**
+	 * 
+	 * @param request
+	 * @return
+	 */
+	private Map<String, String> createExpDefs(final HttpServletRequest request) {
+		final Map<String, String> map = new HashMap<>();
+		// Getting request parameter
+		final String defs = request.getParameter("defs");
+		if (defs != null) {
+			final ExprDef[] p = gson.fromJson(defs, ExprDef[].class);
+			for (final ExprDef e : p)
+				map.put(e.getId(), e.getText());
+		}
+		return map;
+	}
+
+	/**
+	 * 
+	 * @param map
+	 * @return
+	 */
+	private String createJsonResult(final Map<String, String> map) {
+		final Interpreter i = new Interpreter(map);
+
+		// Producing result
+		final List<ExprResult> l = new ArrayList<>();
+		for (final Entry<String, Value> entry : i.getValues().entrySet()) {
+			final String id = entry.getKey();
+			l.add(ExprResult.create(id, map.get(id), entry.getValue()));
+		}
+		Collections.sort(l, new Comparator<ExprResult>() {
+
+			@Override
+			public int compare(final ExprResult o1, final ExprResult o2) {
+				return o1.getId().compareTo(o2.getId());
+			}
+		});
+		final String json = gson.toJson(l.toArray(new ExprResult[0]));
+		return json;
+	}
+
+	/**
+	 * @param stream
+	 * @param map
+	 * @throws SAXException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws IOException
+	 * @throws TransformerConfigurationException
+	 */
+	private void createXmlResult(final OutputStream stream,
+			final Map<String, String> map)
+			throws TransformerConfigurationException, IOException,
+			TransformerFactoryConfigurationError, SAXException {
+		new DefsSerializer().save(stream, map);
 	}
 
 	/**
@@ -103,62 +160,5 @@ public class RatioServlet extends HttpServlet {
 			response.getWriter().print(json);
 		}
 		logger.debug("Exiting RatioServlet");
-	}
-
-	/**
-	 * @param stream
-	 * @param map
-	 * @throws SAXException
-	 * @throws TransformerFactoryConfigurationError
-	 * @throws IOException
-	 * @throws TransformerConfigurationException
-	 */
-	private void createXmlResult(final OutputStream stream,
-			final Map<String, String> map)
-			throws TransformerConfigurationException, IOException,
-			TransformerFactoryConfigurationError, SAXException {
-		new DefsSerializer().save(stream, map);
-	}
-
-	/**
-	 * 
-	 * @param map
-	 * @return
-	 */
-	private String createJsonResult(final Map<String, String> map) {
-		final Interpreter i = new Interpreter(map);
-
-		// Producing result
-		final List<ExprResult> l = new ArrayList<>();
-		for (final Entry<String, Value> entry : i.getValues().entrySet()) {
-			final String id = entry.getKey();
-			l.add(ExprResult.create(id, map.get(id), entry.getValue()));
-		}
-		Collections.sort(l, new Comparator<ExprResult>() {
-
-			@Override
-			public int compare(final ExprResult o1, final ExprResult o2) {
-				return o1.getId().compareTo(o2.getId());
-			}
-		});
-		final String json = gson.toJson(l.toArray(new ExprResult[0]));
-		return json;
-	}
-
-	/**
-	 * 
-	 * @param request
-	 * @return
-	 */
-	private Map<String, String> createExpDefs(final HttpServletRequest request) {
-		final Map<String, String> map = new HashMap<>();
-		// Getting request parameter
-		final String defs = request.getParameter("defs");
-		if (defs != null) {
-			final ExprDef[] p = gson.fromJson(defs, ExprDef[].class);
-			for (final ExprDef e : p)
-				map.put(e.getId(), e.getText());
-		}
-		return map;
 	}
 }

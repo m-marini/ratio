@@ -25,18 +25,18 @@ public class ExprDef {
 	}
 
 	/**
+	 * @return the text
+	 */
+	public String getText() {
+		return text;
+	}
+
+	/**
 	 * @param id
 	 *            the id to set
 	 */
 	public void setId(final String id) {
 		this.id = id;
-	}
-
-	/**
-	 * @return the text
-	 */
-	public String getText() {
-		return text;
 	}
 
 	/**

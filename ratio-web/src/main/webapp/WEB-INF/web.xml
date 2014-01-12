@@ -12,17 +12,5 @@
 		<welcome-file>default.htm</welcome-file>
 		<welcome-file>default.jsp</welcome-file>
 		<welcome-file>ratio.html</welcome-file>
-			</welcome-file-list>
-	<!-- 
-	<servlet>
-		<description></description>
-		<display-name>RatioServlet</display-name>
-		<servlet-name>RatioServlet</servlet-name>
-		<servlet-class>org.mmarini.ratio.web.RatioServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>RatioServlet</servlet-name>
-		<url-pattern>/ratio/*</url-pattern>
-	</servlet-mapping>
-	 -->
+	</welcome-file-list>
 </web-app>
