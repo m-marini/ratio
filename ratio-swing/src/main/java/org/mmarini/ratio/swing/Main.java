@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -80,11 +80,11 @@ public class Main {
 	public static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	/**
-	 * @param args
+	 * 
+	 * @return
 	 */
-	public static void main(final String[] args) {
-		installLookAndFeel();
-		new Main().run();
+	private static File getOptionsFile() {
+		return new File(System.getProperty("user.home"), ".ratio.xml"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -93,10 +93,10 @@ public class Main {
 	private static void installLookAndFeel() {
 		try {
 			final Properties p = loadProperties();
-			final String c = p.getProperty("lookAndFeelClass",
+			final String c = p.getProperty("lookAndFeelClass", //$NON-NLS-1$
 					UIManager.getSystemLookAndFeelClassName());
 			UIManager.setLookAndFeel(c);
-			logger.debug("Set Look&Feel to {}", c);
+			logger.debug("Set Look&Feel to {}", c); //$NON-NLS-1$
 		} catch (ClassNotFoundException | InstantiationException
 				| IllegalAccessException | UnsupportedLookAndFeelException e) {
 			logger.error(e.getMessage(), e);
@@ -120,25 +120,25 @@ public class Main {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * @param args
 	 */
-	private static void saveProperties(final Properties p) {
-		try {
-			final FileOutputStream out = new FileOutputStream(getOptionsFile());
-			p.storeToXML(out, null, "UTF8");
-			out.close();
-		} catch (final IOException e) {
-			logger.error(e.getMessage(), e);
-		}
+	public static void main(final String[] args) {
+		installLookAndFeel();
+		new Main().run();
 	}
 
 	/**
 	 * 
 	 * @return
 	 */
-	private static File getOptionsFile() {
-		return new File(System.getProperty("user.home"), ".ratio.xml");
+	private static void saveProperties(final Properties p) {
+		try {
+			final FileOutputStream out = new FileOutputStream(getOptionsFile());
+			p.storeToXML(out, null, "UTF8"); //$NON-NLS-1$
+			out.close();
+		} catch (final IOException e) {
+			logger.error(e.getMessage(), e);
+		}
 	}
 
 	private final JFrame frame;
@@ -172,7 +172,7 @@ public class Main {
 		frame = new JFrame(Messages.getString("Main.title")); //$NON-NLS-1$
 		defs = new HashMap<>();
 		expTableModel = new ExpressionTableModel();
-		fileChooser = new JFileChooser(new File(".")); //$NON-NLS-1$
+		fileChooser = new JFileChooser();
 		idField = new JTextField(10);
 		editingField = new JTextArea();
 		valueField = new JTextArea();
@@ -305,7 +305,8 @@ public class Main {
 				.getString("Main.filetype.text"), //$NON-NLS-1$
 				"xml")); //$NON-NLS-1$
 		try {
-			final URL url = getClass().getResource("/help/help.html"); //$NON-NLS-1$
+			final URL url = getClass().getResource(
+					Messages.getString("Main.helpFile")); //$NON-NLS-1$
 			final JEditorPane hp = new JEditorPane(url);
 			hp.addHyperlinkListener(new HyperlinkListener() {
 
@@ -519,13 +520,13 @@ public class Main {
 			@Override
 			public void stateChanged(final ChangeEvent e) {
 				final Properties p = loadProperties();
-				p.setProperty("lookAndFeelClass", UIManager.getLookAndFeel()
+				p.setProperty("lookAndFeelClass", UIManager.getLookAndFeel() //$NON-NLS-1$
 						.getClass().getName());
 				saveProperties(p);
 			}
 		}, frame, fileChooser).createMenuBar("file", newAction, openAction, //$NON-NLS-1$
 				null, saveAction, saveAsAction, null, exitAction, "edit", //$NON-NLS-1$
-				addExpAction, "options", "lookAndFeel", "help", helpAction); //$NON-NLS-1$
+				addExpAction, "options", "lookAndFeel", "help", helpAction); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/**
@@ -587,6 +588,8 @@ public class Main {
 				defs = new DefsSerializer().load(f);
 				process();
 				saveEnabled = true;
+				frame.setTitle(String.format(
+						Messages.getString("Main.fileTitle.text"), f.getName())); //$NON-NLS-1$
 			} catch (final Exception e) {
 				saveEnabled = false;
 				showMessage(e);
@@ -629,6 +632,8 @@ public class Main {
 		try {
 			new DefsSerializer().save(f, defs);
 			saveEnabled = true;
+			frame.setTitle(String.format(
+					Messages.getString("Main.fileTitle.text"), f.getName())); //$NON-NLS-1$
 		} catch (final Exception e) {
 			showMessage(e);
 			saveEnabled = false;
