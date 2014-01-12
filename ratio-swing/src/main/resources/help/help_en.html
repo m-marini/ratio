@@ -55,23 +55,22 @@ td {
 				<li><a href="#HowToDelete">How to delete an expression</a></li>
 				<li><a href="#HowToRestore">How to restore changed values</a></li>
 			</ul></li>
-		<li><a href="#Expressions">Expressions</a></li>
-		<ul>
-			<li><a href="#Composition">Composition</a></li>
-			<li><a href="#Slicing">Slicing</a></li>
-			<li><a href="#Oper">Operators</a></li>
-			<li><a href="#Identity">Identity</a></li>
-			<li><a href="#Det">Determinant</a></li>
-			<li><a href="#Inv">Inverse</a></li>
-			<li><a href="#Trace">Trace</a></li>
-			<li><a href="#Trans">Transpose</a></li>
-			<li><a href="#Reduce">Reduce</a></li>
-			<li><a href="#lcm">LCM</a></li>
-			<li><a href="#rank">Rank</a></li>
-			<li><a href="#bases">Bases</a></li>
-			<li><a href="#Priorities">Operator Priorities</a></li>
-		</ul>
-		</li>
+		<li><a href="#Expressions">Expressions</a>
+			<ul>
+				<li><a href="#Composition">Composition</a></li>
+				<li><a href="#Slicing">Slicing</a></li>
+				<li><a href="#Oper">Operators</a></li>
+				<li><a href="#Identity">Identity</a></li>
+				<li><a href="#Det">Determinant</a></li>
+				<li><a href="#Inv">Inverse</a></li>
+				<li><a href="#Trace">Trace</a></li>
+				<li><a href="#Trans">Transpose</a></li>
+				<li><a href="#Reduce">Reduce</a></li>
+				<li><a href="#lcm">LCM</a></li>
+				<li><a href="#rank">Rank</a></li>
+				<li><a href="#bases">Bases</a></li>
+				<li><a href="#Priorities">Operator Priorities</a></li>
+			</ul></li>
 		<li><a href="#Syntax">Syntax</a></li>
 	</ul>
 
@@ -132,7 +131,7 @@ td {
 		created.</p>
 	<p>In the Details Panel you can change the name of expression and
 		the text of the expression.
-	<p>Press th e Apply Button in the Details Panel to apply the
+	<p>Press the Apply Button in the Details Panel to apply the
 		changes.</p>
 	<p>If there is error, it will be shown in the error area of Detail
 		Panel identifying the location of error and the cause.</p>
@@ -142,14 +141,14 @@ td {
 	<p>In the Exploring Panel select the expression to modify.</p>
 	<p>In the Details Panel you can change the name of expression and
 		the text of the expression.
-	<p>Press th e Apply Button in the Details Panel to apply the
+	<p>Press the Apply Button in the Details Panel to apply the
 		changes.</p>
 	<p>If there is error, it will be shown in the error area of Detail
 		Panel identifying the location of error and the cause.</p>
 
 	<a name="HowToDelete"></a>
 	<h3>How to delete an expression</h3>
-	<p>In the Exploring Panel select the expression to modify.</p>
+	<p>In the Exploring Panel select the expression to delete.</p>
 	<p>In the Details Panel press the Delete Button; the expression
 		will be removed.</p>
 
@@ -175,7 +174,7 @@ td {
 		and ";".</p>
 	<p>
 		The <span class="expr">","</span> operator create a new array
-		augmenting the right term with columns from right term.
+		augmenting the left term with columns from right term.
 	</p>
 	<p>
 		Eg: <span class="expr">"1,2,3"</span> produces an array of 1 row by 3
@@ -190,7 +189,7 @@ td {
 	</p>
 	<p>
 		The <span class="expr">";"</span> operator create a new array
-		augmenting the right term with columns from right term.
+		augmenting the left term with the rows from right term.
 	</p>
 	<p>
 		Eg: <span class="expr">"1;2;3"</span> produces an array of 3 rows by 1
@@ -329,8 +328,8 @@ td {
 	<a name="Inv"></a>
 	<h3>Inverse</h3>
 	<p>
-		You can compute the determinant of an array using the <span
-			class="expr">inv</span> function.
+		You can compute the inverse of an array using the <span class="expr">inv</span>
+		function.
 	</p>
 	<p>
 		Eg. <span class="expr">"inv(2,1;3,4)"</span> produces <span
@@ -396,17 +395,17 @@ td {
 	<a name="bases"></a>
 	<h3>Bases</h3>
 	<p>
-		You can compute extract the base vectors of a matrix using the
-		function <span class="expr">bases</span>.
+		You can compute the base vectors of a matrix using the function <span
+			class="expr">bases</span>.
 	</p>
 	<p>
-		Note than given a V=<span class="expr">(1,2,3;2,3,4;3,4,5)</span>
+		Note than given V=<span class="expr">(1,2,3;2,3,4;3,4,5)</span> a
 		vector set (any column of matrix rappresents a vector), you can find
-		the bases and the rappresentatio of the vector set in the new bases as
-		follow:<br> Let E1 = <span class="expr">bases V</span> be the new
-		bases of V and n = <span class="expr">rank V</span> the rank of v. The
-		new vector set, in the E1 bases, is V1 = <span class="expr">reduce
-			V row (0,n-1)</span>.
+		the base vectors and the rappresentation of the vector set in the new
+		base set as follow:<br> Let E1 = <span class="expr">bases
+			V</span> be the new bases of V and n = <span class="expr">rank V</span> the
+		rank of v. The new vector set, in the E1 bases, is V1 = <span
+			class="expr">reduce V row (0,n-1)</span>.
 	</p>
 	<p>
 		Eg. <span class="expr">"bases(1,2,3;2,3,4;3,4,5)"</span> produces <span
