@@ -27,85 +27,30 @@
         </ul>
       </header>
       <section>
-        <h1>
-<a name="ratio" class="anchor" href="#ratio"><span class="octicon octicon-link"></span></a>Ratio</h1>
+        <p><strong>Ratio</strong> is a java application that handles rational numbers and matrices.</p>
 
-<p><strong>Ratio</strong> is a calculator that handles rational numbers and matrix algebra.</p>
+<p>Evaluating expressions based on rational numbers and matrices are going to get easy.
+For example you can compute the product between a matrix and a vector as</p>
 
-<h2>
-<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting started</h2>
+<pre><code> 1  2  3     1       3
+ 2  3  4  x  1/2  =  29/6
+ 3  2  1     1/3     203
+</code></pre>
 
-<p>When started Ratio shows you the workbench window with a Tool Bar and two panels:</p>
+<p>typing simply</p>
 
-<ul>
-<li>In the left there is the Exploring Panel.</li>
-<li>In the right there is the Details Panel showing the details.</li>
-</ul><h3>
-<a name="tool-bar" class="anchor" href="#tool-bar"><span class="octicon octicon-link"></span></a>Tool Bar</h3>
+<pre><code>(1, 2, 3; 2, 3, 4; 3, 4, 5) * (1; 1/2; 1/3)
+</code></pre>
 
-<p>The Tool Bar contains the classical buttons to create new document, load an existing
-document and save current document.</p>
+<p>Most of the algebraic operators are available, such +, -, *, /, operators of composition of matrices and the general functions on matrices such as rank, inverse, determinant, reduction, identity and calculation of basis vectors.</p>
 
-<p>The other important button is <strong>Add Button</strong> that allows you to insert a new expression.</p>
+<p>To get details information you can check out the <a href="https://github.com/m-marini/ratio/wiki">https://github.com/m-marini/ratio/wiki</a>.</p>
 
-<h3>
-<a name="exploring-panel" class="anchor" href="#exploring-panel"><span class="octicon octicon-link"></span></a>Exploring Panel</h3>
+<p>To run <strong>Ratio</strong> you need the Java 1.7 runtime environment installed.</p>
 
-<p>The Exploring Panel is a table contains the names, texts and values of the expressions.</p>
+<p>The application installable file are available in <a href="https://github.com/m-marini/ratio/wiki/Downloads">https://github.com/m-marini/ratio/wiki/Downloads</a></p>
 
-<p>Selecting a row in the Exploring Panel the details of selected definition are shown in
-the Details Panel.</p>
-
-<h3>
-<a name="details-panel" class="anchor" href="#details-panel"><span class="octicon octicon-link"></span></a>Details Panel</h3>
-
-<p>The Details Panel shows the details of the selected row in
-Exploring Panel. You can see and change the name and the text of an
-expression, the error in the text if any and the current value of
-expression.</p>
-
-<p>In the bottom of the panel you can find three buttons:</p>
-
-<ul>
-<li>The <strong>Delete Button</strong> allows you to delete the expression.</li>
-<li>The <strong>Restore Button</strong> restores the original values if changed.</li>
-<li>The <strong>Apply Button</strong> applies any changes in the name or text, recomputing each value.</li>
-</ul><h3>
-<a name="how-to-add-a-new-expression" class="anchor" href="#how-to-add-a-new-expression"><span class="octicon octicon-link"></span></a>How to add a new expression</h3>
-
-<p>In the Tool Bar press the Add Button; a new expression will be created.</p>
-
-<p>In the Details Panel you can change the name of expression and the text of the expression.</p>
-
-<p>Press the Apply Button in the Details Panel to apply the changes.</p>
-
-<p>If there is error, it will be shown in the error area of Detail 
-Panel identifying the location of error and the cause.</p>
-
-<h3>
-<a name="how-to-modify-an-expression" class="anchor" href="#how-to-modify-an-expression"><span class="octicon octicon-link"></span></a>How to modify an expression</h3>
-
-<p>In the Exploring Panel select the expression to modify.</p>
-
-<p>In the Details Panel you can change the name of expression and the text of the expression.</p>
-
-<p>Press the Apply Button in the Details Panel to apply the changes.</p>
-
-<p>If there is error, it will be shown in the error area of Detail
-Panel identifying the location of error and the cause.</p>
-
-<h3>
-<a name="how-to-delete-an-expression" class="anchor" href="#how-to-delete-an-expression"><span class="octicon octicon-link"></span></a>How to delete an expression</h3>
-
-<p>In the Exploring Panel select the expression to delete.</p>
-
-<p>In the Details Panel press the Delete Button; the expression will be removed.</p>
-
-<h3>
-<a name="how-to-restore-changed-values" class="anchor" href="#how-to-restore-changed-values"><span class="octicon octicon-link"></span></a>How to restore changed values.</h3>
-
-<p>If you changed the values and you have not yet applied the changes,
-you can restore the original values pressing Restore Button in Details Panel.</p>
+<p><img src="https://raw.github.com/m-marini/ratio/web-docs/ratio-web-docs/images/ratio-sample.png" alt="Ratio application sample image"></p>
       </section>
     </div>
     <footer>
