@@ -15,8 +15,5 @@ typing simply
 
 Most of the algebraic operators are available, such +, -, *, /, operators of composition of matrices and the general functions on matrices such as rank, inverse, determinant, reduction, identity and alculation of basis vectors.
 
-To get details information you can check out the [[Getting started|Getting Started]] guide or [[How to|HowTo]] guide.
-
 To run **Ratio** you need the Java 1.7 runtime environment installed.
 
-The application installable file are available in [[Downloads|Downloads]] section.
